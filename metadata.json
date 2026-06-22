@@ -1,0 +1,8 @@
+{
+  "name": "STARE Piura",
+  "description": "Sistema de Trazabilidad y Asignación de Recursos para Entidades de Apoyo Social en la región de Piura, Perú. Gestión de microdonaciones MYPE, bolsas de recursos, fondos logísticos y calendario de acción social.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
