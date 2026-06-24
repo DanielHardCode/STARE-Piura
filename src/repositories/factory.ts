@@ -26,6 +26,16 @@ import {
   MockNotificationRepository
 } from './mock';
 
+import {
+  SupabaseLaravelOrganizationRepository,
+  SupabaseLaravelMypeRepository,
+  SupabaseLaravelDonorRepository,
+  SupabaseLaravelDonationRepository,
+  SupabaseLaravelEventRepository,
+  SupabaseLaravelTransactionRepository,
+  SupabaseLaravelNotificationRepository
+} from './supabase_laravel';
+
 export interface Repositories {
   organizations: IOrganizationRepository;
   mypes: IMypeRepository;
@@ -54,10 +64,15 @@ export function getRepositories(): Repositories {
       notifications: new MockNotificationRepository(),
     };
   } else {
-    // Temporalmente lanzamos error hasta que implementemos la integración con Supabase/Laravel en fases posteriores.
-    throw new Error(
-      'El proveedor de datos de Supabase + Laravel aún no está implementado. Por favor, asegúrese de usar VITE_DATA_PROVIDER=mock en su archivo .env'
-    );
+    cachedRepositories = {
+      organizations: new SupabaseLaravelOrganizationRepository(),
+      mypes: new SupabaseLaravelMypeRepository(),
+      donors: new SupabaseLaravelDonorRepository(),
+      donations: new SupabaseLaravelDonationRepository(),
+      events: new SupabaseLaravelEventRepository(),
+      transactions: new SupabaseLaravelTransactionRepository(),
+      notifications: new SupabaseLaravelNotificationRepository(),
+    };
   }
 
   return cachedRepositories;
