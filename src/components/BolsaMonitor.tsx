@@ -34,7 +34,7 @@ interface BolsaMonitorProps {
     amount?: number,
     itemsDonated?: { itemName: string; qty: number }[]
   ) => void;
-  onBalanceInventory: (eventId: string, maxBudgetAllocated: number) => { success: boolean; spent: number; msg: string };
+  onBalanceInventory: (eventId: string, maxBudgetAllocated: number) => Promise<{ success: boolean; spent: number; msg: string }> | { success: boolean; spent: number; msg: string };
   availableAcquisitionFund: number;
 }
 
@@ -180,12 +180,12 @@ export const BolsaMonitor: React.FC<BolsaMonitorProps> = ({
     setShowDonationModal(false);
   };
 
-  const handleBalancingSubmit = (e: React.FormEvent) => {
+  const handleBalancingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsedBudget = parseFloat(maxBudget);
     if (isNaN(parsedBudget) || parsedBudget <= 0) return;
 
-    const result = onBalanceInventory(activeEvent.id, parsedBudget);
+    const result = await onBalanceInventory(activeEvent.id, parsedBudget);
     setShowBalanceModal(false);
     
     // Quick confirm alert (custom elegant styling is inside app, but general native dialog is fine for final confirmations on operations)

@@ -2,14 +2,17 @@
  * @file App.tsx
  * @description Punto de entrada principal de la aplicación STARE Piura.
  *
- * Este archivo únicamente monta el AppRouter, que es quien gestiona la
- * navegación, el estado global y la composición de features.
- *
- * Arquitectura: Feature-Folder / Module-Based
- * Ver: docs/ARCHITECTURE.md
+ * ─── CHECKPOINT FASE 1 ───
+ * Monta el AppRouter completo para consumir las capas de datos mockificadas.
  */
-import { AppRouter } from './app/router/AppRouter';
+
+import { ToastProvider } from '@/components/ui';
+import { AppRouter } from '@/app/router/AppRouter';
 
 export default function App() {
-  return <AppRouter />;
+  return (
+    <ToastProvider>
+      <AppRouter />
+    </ToastProvider>
+  );
 }

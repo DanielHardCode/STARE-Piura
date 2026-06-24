@@ -1,17 +1,16 @@
 /**
  * @file AppRouter.tsx
  * @description Enrutador principal de STARE Piura.
- * Gestiona la navegación entre pantallas mediante estado local (no se usa react-router
- * porque la aplicación es offline-first y de pantalla única).
- * Renderiza el componente de pantalla activo según la selección del usuario.
+ * Adaptado para consumir los nuevos almacenes Zustand, servicios y repositorios en la Fase 1,
+ * sirviendo como puente para mantener la compatibilidad con los componentes visuales existentes.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Store, MapPin } from 'lucide-react';
 import { ActiveScreen } from '../config/app.config';
 import { AppLayout } from '../layouts/AppLayout';
 
-// Feature imports
+// Feature imports (Components)
 import { KPICards } from '../../components/KPICards';
 import { SocialCalendar } from '../../components/SocialCalendar';
 import { BolsaMonitor } from '../../components/BolsaMonitor';
@@ -21,13 +20,17 @@ import { VoluntarioMobil } from '../../components/VoluntarioMobil';
 import { MypeDirectory } from '../../components/MypeDirectory';
 import { OrganizationManager } from '../../components/OrganizationManager';
 
-// Feature hooks
-import { useEvents } from '../../features/events';
-import { useFinance } from '../../features/finance';
-import { useDonations } from '../../features/donations';
-import { useMypes } from '../../features/mypes';
+// New Zustand Stores
+import {
+  useEventStore,
+  useFinanceStore,
+  useDonationStore,
+  useMypeStore,
+  useOrganizationStore,
+  useNotificationStore
+} from '@/stores';
 
-// Types
+// Types (Keep for compatibility with components)
 import { SocialEvent } from '../../features/events';
 import { FundSourceType } from '../../features/finance';
 import { PiuraDistrict } from '../../shared/types';
@@ -37,34 +40,162 @@ import { MypeProfile } from '../../features/mypes';
 export function AppRouter() {
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedMypeToDonate, setSelectedMypeToDonate] = useState<any | null>(null);
 
-  // Feature hooks
+  // 1. Consume Zustand stores
   const {
-    events,
+    events: newEvents,
     selectedEventId,
     setSelectedEventId,
-    addEvent,
-    completeEvent,
-    updateBolsaFromDonation,
-    balanceInventory,
-    directBuyItem,
-    overallCoveragePct,
-  } = useEvents();
+    addEvent: storeAddEvent,
+    updateEvent: storeUpdateEvent,
+    updateSupplyItem: storeUpdateSupplyItem,
+    fetchEvents,
+  } = useEventStore();
 
-  const { movements, balances, addTransaction, deductFromAcquisitionFund } = useFinance();
-  const { donations, addDonation, getDonationMetrics } = useDonations();
-  const { mypes, selectedMypeToDonate, registerMype, selectMypeForDonation, clearSelectedMype } = useMypes();
+  const {
+    transactions: newTransactions,
+    balances: newBalances,
+    fetchTransactions,
+    fetchBalances,
+    fetchKPIs,
+  } = useFinanceStore();
+
+  const {
+    donations: newDonations,
+    fetchDonations,
+  } = useDonationStore();
+
+  const {
+    mypes: newMypes,
+    fetchMypes,
+  } = useMypeStore();
+
+  // 2. Fetch data from repositories on mount
+  useEffect(() => {
+    fetchEvents();
+    fetchTransactions();
+    fetchBalances();
+    fetchKPIs();
+    fetchDonations();
+    fetchMypes();
+    useDonationStore.getState().fetchDonors();
+    useNotificationStore.getState().fetchNotifications();
+    useOrganizationStore.getState().fetchOrganizations();
+  }, [fetchEvents, fetchTransactions, fetchBalances, fetchKPIs, fetchDonations, fetchMypes]);
+
+  // 3. Map new domain models to components' expected types (Adapter Pattern)
+  const events: SocialEvent[] = newEvents.map((evt) => ({
+    id: evt.id,
+    title: evt.title,
+    description: evt.description || '',
+    date: evt.start_time.split('T')[0],
+    district: evt.distrito as any,
+    targetAudience: evt.target_audience,
+    status: evt.status === 'realizada'
+      ? 'completado'
+      : evt.status === 'en_curso'
+      ? 'en_progreso'
+      : evt.status === 'cancelada'
+      ? 'cancelado'
+      : 'programado',
+    itemsBolsa: evt.supply_items.map((item) => ({
+      id: item.id,
+      name: item.nombre,
+      unit: item.unidad,
+      targetQty: item.cantidad_requerida,
+      currentQty: item.cantidad_cubierta,
+      unitPriceEstimate: item.precio_unitario_estimado,
+    })),
+  }));
+
+  const balances = {
+    cajaChica: newBalances.caja_chica,
+    fondoAdquisicion: newBalances.fondo_adquisicion,
+  };
+
+  const movements = newTransactions.map((tx) => ({
+    id: tx.id,
+    fund: tx.fondo as FundSourceType,
+    type: tx.tipo as 'ingreso' | 'egreso',
+    amount: tx.monto,
+    description: tx.concepto,
+    method: tx.donation_id ? 'Transferencia' as const : 'Efectivo_CajaChica' as const,
+    date: tx.fecha,
+  }));
+
+  const donations = newDonations.map((don) => ({
+    id: don.id,
+    mypeName: don.donor_nombre,
+    mypeCategory: 'General',
+    district: 'Piura Centro' as PiuraDistrict, // default representativo
+    date: don.fecha.split('T')[0],
+    method: (don.medio_pago === 'yape'
+      ? 'Yape'
+      : don.medio_pago === 'plin'
+      ? 'Plin'
+      : don.medio_pago === 'transferencia'
+      ? 'Transferencia'
+      : don.medio_pago === 'especie'
+      ? 'Especie'
+      : 'Efectivo_CajaChica') as DonationMethod,
+    amount: don.monto,
+    itemsDonated: don.items?.map((item) => ({
+      itemName: item.item_nombre,
+      qty: item.cantidad,
+    })),
+    eventId: don.event_id || 'stock_general',
+    phone: '',
+    ruc: '',
+    txNumber: '',
+    receiptFileName: don.comprobante_url || '',
+    comment: don.descripcion || '',
+  }));
+
+  const mypes: MypeProfile[] = newMypes.map((m) => ({
+    id: m.id,
+    name: m.razon_social,
+    ruc: m.ruc,
+    phone: m.telefono,
+    district: m.distrito as any,
+    category: m.rubro,
+    contactPerson: m.contacto,
+    registeredAt: m.created_at,
+    email: m.email || '',
+    activo: m.activo,
+    historialAportes: m.historial_aportes,
+  } as any));
+
+  const getDonationMetrics = () => {
+    const counts: Record<string, number> = {};
+    const amounts: Record<string, number> = {};
+    newDonations.forEach((d) => {
+      counts[d.donor_nombre] = (counts[d.donor_nombre] || 0) + 1;
+      if (d.tipo === 'monetaria' && d.monto) {
+        amounts[d.donor_nombre] = (amounts[d.donor_nombre] || 0) + d.monto;
+      }
+    });
+    return { counts, amounts };
+  };
 
   const { counts: donationCounts, amounts: donationAmounts } = getDonationMetrics();
 
+  // 4. Calculate overall coverage pct
+  const aggregateTargetVal = newEvents.reduce((acc, evt) => {
+    return acc + evt.supply_items.reduce((sAcc, s) => sAcc + s.cantidad_requerida * s.precio_unitario_estimado, 0);
+  }, 0);
+
+  const aggregateCurrentVal = newEvents.reduce((acc, evt) => {
+    return acc + evt.supply_items.reduce((sAcc, s) => sAcc + s.cantidad_cubierta * s.precio_unitario_estimado, 0);
+  }, 0);
+
+  const overallCoveragePct = aggregateTargetVal > 0 ? (aggregateCurrentVal / aggregateTargetVal) * 100 : 0;
+
   // ─────────────────────────────────────────────────────────────
-  // Handlers compuestos (orquestan múltiples features)
+  // Handlers compuestos (orquestan múltiples features con Zustand)
   // ─────────────────────────────────────────────────────────────
 
-  /**
-   * Registra una microdonación y propaga efectos a inventario y fondos.
-   */
-  const handleRegisterDonation = (
+  const handleRegisterDonation = async (
     eventId: string,
     mypeName: string,
     category: string,
@@ -82,78 +213,209 @@ export function AppRouter() {
       receiptFileName?: string;
     }
   ) => {
-    const donationId = `don-${Date.now()}`;
-    const targetEventId = eventId && eventId !== 'stock_general' ? eventId : 'stock_general';
+    // 1. Buscar o crear donante
+    const donors = useDonationStore.getState().donors;
+    let donor = donors.find((d) => d.nombres.toLowerCase() === mypeName.toLowerCase());
 
-    addDonation({
-      id: donationId,
-      mypeName,
-      mypeCategory: category,
-      district,
-      date: '2026-06-03',
-      method,
-      amount,
-      itemsDonated,
-      eventId: targetEventId,
-      phone: additionalData?.phone,
-      ruc: additionalData?.ruc,
-      txNumber: additionalData?.txNumber,
-      receiptFileName: additionalData?.receiptFileName,
-      comment: method === 'Especie'
+    if (!donor) {
+      const mypesList = useMypeStore.getState().mypes;
+      const mype = mypesList.find((m) => m.razon_social.toLowerCase() === mypeName.toLowerCase() || m.ruc === additionalData?.ruc);
+      donor = await useDonationStore.getState().addDonor({
+        nombres: mypeName,
+        tipo: additionalData?.ruc && additionalData.ruc.length === 11 ? 'empresa' : 'persona_natural',
+        documento: additionalData?.ruc || '00000000',
+        telefono: additionalData?.phone,
+        email: undefined,
+        distrito: district,
+        mype_id: mype?.id,
+      });
+    }
+
+    // 2. Mapear medio de pago
+    const mappedMethod = (method as any) === 'Yape'
+      ? 'yape'
+      : (method as any) === 'Plin'
+      ? 'plin'
+      : (method as any) === 'Transferencia'
+      ? 'transferencia'
+      : (method as any) === 'Especie'
+      ? 'especie'
+      : 'efectivo';
+
+    // 3. Registrar donación
+    const eventUuid = eventId && eventId !== 'stock_general' ? eventId : undefined;
+    const newDon = await useDonationStore.getState().addDonation({
+      donor_id: donor.id,
+      donor_nombre: donor.nombres,
+      tipo: method === 'Especie' ? 'especie' : 'monetaria',
+      medio_pago: mappedMethod as any,
+      monto: amount,
+      items: itemsDonated?.map((item) => ({
+        item_nombre: item.itemName,
+        cantidad: item.qty,
+        unidad: 'unidades',
+      })),
+      descripcion: method === 'Especie'
         ? `Aporte en especie de ${category}. Insumos: ${itemsDonated?.map(i => `${i.qty}u de ${i.itemName}`).join(', ') || 'Varios'}.`
-        : `Aporte financiero de ${category}. ${additionalData?.txNumber ? `Código Op Yape/Plin: ${additionalData.txNumber}` : 'Asentado en caja.'}`,
+        : `Aporte financiero de ${category}.`,
+      fondo_destino: method === 'Especie'
+        ? undefined
+        : additionalData?.fundDestination === 'caja_chica'
+        ? 'caja_chica'
+        : 'fondo_adquisicion',
+      event_id: eventUuid,
+      comprobante_url: additionalData?.receiptFileName,
+      fecha: new Date().toISOString().split('T')[0],
     });
 
-    if (method === 'Especie' && itemsDonated && itemsDonated.length > 0 && targetEventId !== 'stock_general') {
-      updateBolsaFromDonation(targetEventId, itemsDonated);
+    // 4. Si es en especie y está asignada a un evento, inyectar stock al hito
+    if (method === 'Especie' && itemsDonated && itemsDonated.length > 0 && eventUuid) {
+      const targetEvt = newEvents.find(e => e.id === eventUuid);
+      if (targetEvt) {
+        for (const item of itemsDonated) {
+          const matchingSupplyItem = targetEvt.supply_items.find(s => s.nombre === item.itemName);
+          if (matchingSupplyItem) {
+            await useEventStore.getState().updateSupplyItem(matchingSupplyItem.id, {
+              cantidad_cubierta: matchingSupplyItem.cantidad_cubierta + item.qty,
+            });
+          }
+        }
+      }
     }
 
-    if (method !== 'Especie' && amount && amount > 0) {
-      const targetFund: FundSourceType =
-        additionalData?.fundDestination || (method === 'Efectivo_CajaChica' ? 'caja_chica' : 'fondo_adquisicion');
-      const linkedEvent = events.find(e => e.id === targetEventId);
-      const dest = linkedEvent
-        ? `visita [${linkedEvent.title}]`
-        : 'Stock General (Amortización Contable de Piura)';
-      addTransaction(targetFund, 'ingreso', amount, `Consignación MYPE de "${mypeName}" asignado a ${dest}`, method);
-    }
+    // Refrescar datos
+    await Promise.all([
+      fetchBalances(),
+      fetchTransactions(),
+      fetchKPIs(),
+      fetchEvents(),
+    ]);
   };
 
-  /**
-   * Balancea inventario y registra egreso en kardex.
-   */
-  const handleBalanceInventory = (eventId: string, maxBudget: number) => {
-    const result = balanceInventory(eventId, maxBudget, balances.fondoAdquisicion);
-    if (result.success) {
-      const targetEvent = events.find(e => e.id === eventId);
-      deductFromAcquisitionFund(
-        result.spent,
-        `Balanceo Bolsa de [${targetEvent?.title || eventId}]: compensación automática.`
-      );
+  const handleBalanceInventory = async (eventId: string, maxBudget: number) => {
+    const targetEvent = newEvents.find(e => e.id === eventId);
+    if (!targetEvent) return { success: false, spent: 0, msg: 'Hito no encontrado' };
+
+    const currentBalances = useFinanceStore.getState().balances;
+    if (maxBudget > currentBalances.fondo_adquisicion) {
+      return { success: false, spent: 0, msg: 'Presupuesto excede el Fondo de Adquisición' };
     }
-    return result;
+
+    let remaining = maxBudget;
+    let spent = 0;
+
+    for (const item of targetEvent.supply_items) {
+      const deficit = Math.max(0, item.cantidad_requerida - item.cantidad_cubierta);
+      if (deficit <= 0) continue;
+      const maxAffordable = Math.floor(remaining / item.precio_unitario_estimado);
+      const buyQty = Math.min(deficit, maxAffordable);
+      if (buyQty > 0) {
+        const cost = buyQty * item.precio_unitario_estimado;
+        remaining -= cost;
+        spent += cost;
+
+        await useEventStore.getState().updateSupplyItem(item.id, {
+          cantidad_cubierta: item.cantidad_cubierta + buyQty,
+        });
+      }
+    }
+
+    if (spent === 0) {
+      return { success: false, spent: 0, msg: 'El monto ingresado es menor que el valor de una sola unidad de los insumos restantes.' };
+    }
+
+    // Registrar egreso en Kardex
+    await useFinanceStore.getState().addTransaction({
+      tipo: 'egreso',
+      concepto: `Balanceo Bolsa de [${targetEvent.title}]: compensación automática.`,
+      monto: spent,
+      fondo: 'fondo_adquisicion',
+      fecha: new Date().toISOString().split('T')[0],
+    });
+
+    // Refrescar
+    await Promise.all([
+      fetchBalances(),
+      fetchTransactions(),
+      fetchKPIs(),
+      fetchEvents(),
+    ]);
+
+    return {
+      success: true,
+      spent,
+      msg: `Se han destinado S/. ${spent.toFixed(2)} del Fondo de Adquisición para balancear el inventario.`,
+    };
   };
 
-  /**
-   * Compra directa de un ítem y registra egreso en kardex.
-   */
-  const handleDirectBuyItem = (
+  const handleDirectBuyItem = async (
     eventId: string,
     itemId: string,
     qtyToBuy: number,
     cost: number,
     itemName: string
   ) => {
-    deductFromAcquisitionFund(
-      cost,
-      `Inyección Compensatoria: Adquisición de ${qtyToBuy}u de "${itemName}" para cerrar brecha.`
-    );
-    directBuyItem(eventId, itemId, qtyToBuy);
+    const targetEvent = newEvents.find(e => e.id === eventId);
+    const targetItem = targetEvent?.supply_items.find(s => s.id === itemId);
+
+    if (targetItem) {
+      // egreso
+      await useFinanceStore.getState().addTransaction({
+        tipo: 'egreso',
+        concepto: `Inyección Compensatoria: Adquisición de ${qtyToBuy}u de "${itemName}" para cerrar brecha.`,
+        monto: cost,
+        fondo: 'fondo_adquisicion',
+        fecha: new Date().toISOString().split('T')[0],
+      });
+
+      // stock
+      await useEventStore.getState().updateSupplyItem(itemId, {
+        cantidad_cubierta: targetItem.cantidad_cubierta + qtyToBuy,
+      });
+
+      await Promise.all([
+        fetchBalances(),
+        fetchTransactions(),
+        fetchKPIs(),
+        fetchEvents(),
+      ]);
+    }
   };
 
-  const handleCompleteEvent = (eventId: string) => completeEvent(eventId);
-  const handleAddEvent = (newEvent: SocialEvent) => addEvent(newEvent);
-  const handleRegisterMype = (mype: MypeProfile) => registerMype(mype);
+  const handleCompleteEvent = async (eventId: string) => {
+    await storeUpdateEvent(eventId, {
+      status: 'realizada',
+    });
+    await Promise.all([fetchEvents(), fetchKPIs()]);
+  };
+
+  const handleAddEvent = async (newEvent: SocialEvent) => {
+    await storeAddEvent({
+      title: newEvent.title,
+      description: newEvent.description,
+      distrito: newEvent.district,
+      target_audience: newEvent.targetAudience,
+      start_time: newEvent.date ? `${newEvent.date}T09:00:00` : new Date().toISOString(),
+      end_time: newEvent.date ? `${newEvent.date}T17:00:00` : new Date().toISOString(),
+    });
+    await Promise.all([fetchEvents(), fetchKPIs()]);
+  };
+
+  const handleRegisterMype = async (mype: MypeProfile) => {
+    await useMypeStore.getState().addMype({
+      razon_social: mype.name,
+      ruc: mype.ruc,
+      rubro: mype.category as any,
+      contacto: mype.contactPerson,
+      telefono: mype.phone,
+      email: (mype as any).email || '',
+      distrito: mype.district as any,
+    });
+    await fetchMypes();
+  };
+
+  const selectMypeForDonation = (mype: any) => setSelectedMypeToDonate(mype);
+  const clearSelectedMype = () => setSelectedMypeToDonate(null);
 
   return (
     <AppLayout
@@ -176,7 +438,19 @@ export function AppRouter() {
                 </h2>
                 <span className="text-xs font-mono text-slate-500 bg-slate-100 rounded px-2.5 py-1">Soles Peruanos (PEN)</span>
               </div>
-              <KPICards balances={balances} movements={movements} onAddTransaction={addTransaction} />
+              <KPICards
+                balances={balances}
+                movements={movements}
+                onAddTransaction={async (fund, type, amount, description) => {
+                  await useFinanceStore.getState().addTransaction({
+                    tipo: type as any,
+                    concepto: description,
+                    monto: amount,
+                    fondo: fund as any,
+                    fecha: new Date().toISOString().split('T')[0],
+                  });
+                }}
+              />
             </section>
 
             <div className="flex flex-col gap-8 w-full items-stretch">
@@ -187,7 +461,12 @@ export function AppRouter() {
                     Cronograma y Visitas Programadas Zonal
                   </h2>
                 </div>
-                <SocialCalendar events={events} selectedEventId={selectedEventId} onSelectEvent={setSelectedEventId} onAddEvent={handleAddEvent} />
+                <SocialCalendar
+                  events={events}
+                  selectedEventId={selectedEventId}
+                  onSelectEvent={setSelectedEventId}
+                  onAddEvent={handleAddEvent}
+                />
               </section>
 
               <section id="bolsa-view" className="w-full space-y-3">
@@ -227,8 +506,8 @@ export function AppRouter() {
               <MypeDirectory
                 mypes={mypes}
                 onRegisterMype={handleRegisterMype}
-                onSelectMypeForDonation={(mype) => {
-                  selectMypeForDonation(mype);
+                onSelectMypeForDonation={(mypeItem) => {
+                  selectMypeForDonation(mypeItem);
                   document.getElementById('captacion-wrapper-card')?.scrollIntoView({ behavior: 'smooth' });
                 }}
                 donationCounts={donationCounts}
