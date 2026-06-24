@@ -51,8 +51,8 @@ const navItems: Array<{
   { id: 'dashboard',      label: 'Command Center',        icon: LayoutDashboard },
   { id: 'captacion',      label: 'Microdonaciones',       icon: HandHeart },
   { id: 'balance',        label: 'Balance y Brechas',     icon: BarChart3 },
-  { id: 'voluntario',     label: 'Visitas de Campo',      icon: CalendarDays },
   { id: 'organizaciones', label: 'Organizaciones',        icon: Building2 },
+  { id: 'eventos',        label: 'Eventos de Ayuda',      icon: CalendarDays },
 ];
 
 const secondaryItems: Array<{

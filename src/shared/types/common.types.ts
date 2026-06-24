@@ -15,4 +15,7 @@ export type PiuraDistrict =
   | 'Sechura'
   | 'Paita'
   | 'Talara'
-  | 'Tambogrande';
+  | 'Tambogrande'
+  | 'Ayabaca'
+  | 'Morropón'
+  | 'Huancabamba';

@@ -34,6 +34,7 @@ const screenTitles: Record<ActiveScreen, string> = {
   balance:        'Balance Financiero y Brechas',
   voluntario:     'Cronograma de Visitas',
   organizaciones: 'Organizaciones Beneficiarias',
+  eventos:        'Eventos y Jornadas de Ayuda',
 };
 
 const screenSubtitles: Record<ActiveScreen, string> = {
@@ -42,6 +43,7 @@ const screenSubtitles: Record<ActiveScreen, string> = {
   balance:        'Análisis de déficits y balanceo automático',
   voluntario:     'Visitas de asistencia social programadas',
   organizaciones: 'Comedores, asilos, vasos de leche y albergues',
+  eventos:        'Planificación de jornadas de apoyo social en Piura',
 };
 
 // ─── Hook: Dark Mode ──────────────────────────────────────────────────────────

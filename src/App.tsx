@@ -2,20 +2,22 @@
  * @file App.tsx
  * @description Punto de entrada principal de la aplicación STARE Piura.
  *
- * ─── CHECKPOINT FASE 3 ───
- * Integra la pantalla de Login y la inicialización de autenticación real
- * con Supabase Auth o simulación Mock.
+ * ─── CHECKPOINT FASE 3/9 ───
+ * Integra la Landing Page comercial y la pantalla de Login con autenticación real
+ * o simulación Mock.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { ToastProvider } from '@/components/ui';
 import { AppRouter } from '@/app/router/AppRouter';
 import { Login } from '@/pages/Login';
+import { Landing } from '@/pages/Landing';
 import { useAuthStore } from '@/stores/auth';
 
 export default function App() {
   const { user, initialized, initializeAuth } = useAuthStore();
+  const [showLogin, setShowLogin] = useState(false);
 
   // Inicializar sesión de autenticación al arrancar la app
   useEffect(() => {
@@ -34,15 +36,19 @@ export default function App() {
     );
   }
 
-  // Si no hay sesión activa, redirigir a la pantalla de Login
-  if (!user) {
-    return <Login />;
+  // Si está autenticado, cargar el enrutador de la aplicación
+  if (user) {
+    return (
+      <ToastProvider>
+        <AppRouter />
+      </ToastProvider>
+    );
   }
 
-  // Si está autenticado, cargar el enrutador de la aplicación
-  return (
-    <ToastProvider>
-      <AppRouter />
-    </ToastProvider>
-  );
+  // Si no hay sesión activa, decidir si mostrar la Landing o el Login
+  if (showLogin) {
+    return <Login onBack={() => setShowLogin(false)} />;
+  }
+
+  return <Landing onEnter={() => setShowLogin(true)} />;
 }

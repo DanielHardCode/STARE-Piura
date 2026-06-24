@@ -42,8 +42,8 @@
 
   /* Texto */
   --color-text-primary:   #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-tertiary:  #94a3b8;
+  --color-text-secondary: #2d3748; /* Slate-750 para excelente contraste */
+  --color-text-tertiary:  #5a6a7c;  /* Slate-550 para contraste > 4.5:1 */
   --color-text-inverse:   #ffffff;
 
   /* Bordes */
@@ -52,13 +52,13 @@
   --color-border-strong: #cbd5e1;
 
   /* Semánticos */
-  --color-success:      #059669;
+  --color-success:      #047857; /* Emerald-700 para contraste WCAG AA */
   --color-success-bg:   #ecfdf5;
-  --color-warning:      #d97706;
+  --color-warning:      #b45309; /* Amber-700 para contraste WCAG AA */
   --color-warning-bg:   #fffbeb;
-  --color-error:        #dc2626;
+  --color-error:        #b91c1c; /* Red-700 para contraste WCAG AA */
   --color-error-bg:     #fef2f2;
-  --color-info:         #0284c7;
+  --color-info:         #0369a1; /* Sky-700 para contraste WCAG AA */
   --color-info-bg:      #f0f9ff;
 
   /* Radios */
@@ -110,7 +110,7 @@
 
   --color-text-primary:   #f1f5f9;
   --color-text-secondary: #94a3b8;
-  --color-text-tertiary:  #475569;
+  --color-text-tertiary:  #8a99ad; /* Slate-400 suave para contraste > 4.5:1 */
   --color-text-inverse:   #0f172a;
 
   --color-border:        #1e293b;
@@ -155,10 +155,15 @@ body {
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
-/* Focus visible personalizado */
-:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
+/* Focus visible personalizado consistente */
+:focus-visible,
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary-500) !important;
+  outline-offset: 2px !important;
   border-radius: var(--radius-sm);
 }
 

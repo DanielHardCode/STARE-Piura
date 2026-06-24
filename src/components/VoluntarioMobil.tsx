@@ -266,7 +266,7 @@ export const VoluntarioMobil: React.FC<VoluntarioMobilProps> = ({
                 <h4 className="font-bold text-amber-350 text-white flex items-center gap-1.5 text-xs uppercase font-mono">
                   <Layers className="w-4 h-4 text-amber-400" /> Arquitectura de la Información (Mobile IA)
                 </h4>
-                <ul className="list-disc pl-4 mt-2 space-y-1 text-slate-350 text-xs">
+                <ul className="list-disc pl-4 mt-2 space-y-1 text-slate-300 text-xs">
                   <li><strong>Core Storage:</strong> <code>AsyncStorage</code> local mapeando colas estructuradas <code>offlineQueue: Array&lt;DeliveryPayload&gt;</code>.</li>
                   <li><strong>Checklist de Carga:</strong> Control de meta volumétrica por insumo vs carga física (validación dual booleana).</li>
                   <li><strong>Evidencia:</strong> Camera API integrando metadatos de ubicación satelital, hora GMT-5 y compresión de JPG a peso ligero (bajas señales).</li>
@@ -553,10 +553,11 @@ const styles = StyleSheet.create({
                   <p className="text-[10px] font-mono uppercase text-slate-400 tracking-wider">Voluntario de Campo STARE</p>
                   
                   <div className="space-y-1">
-                    <label className="block text-[9px] font-mono font-bold text-orange-400 uppercase tracking-widest">
+                    <label htmlFor="select-ruta-entrega" className="block text-[9px] font-mono font-bold text-orange-300 uppercase tracking-widest">
                       Seleccionar Ruta de Entrega:
                     </label>
                     <select
+                      id="select-ruta-entrega"
                       value={selectedEventId}
                       onChange={(e) => setSelectedEventId(e.target.value)}
                       className="w-full text-xs font-black bg-slate-800 text-amber-300 border border-slate-700 rounded-lg px-2 py-1.5 focus:border-amber-450 outline-hidden"
@@ -599,7 +600,7 @@ const styles = StyleSheet.create({
 
                     <div className="space-y-1.5">
                       {activeEvent.itemsBolsa.length === 0 ? (
-                        <p className="text-[11px] text-slate-450 text-center py-2">Vacío sin ítems.</p>
+                        <p className="text-[11px] text-slate-300 text-center py-2">Vacío sin ítems.</p>
                       ) : (
                         activeEvent.itemsBolsa.map(item => {
                           const isChecked = !!checkedItems[item.id];
@@ -607,6 +608,8 @@ const styles = StyleSheet.create({
                             <button
                               key={item.id}
                               type="button"
+                              role="checkbox"
+                              aria-checked={isChecked}
                               onClick={() => {
                                 setCheckedItems(prev => ({
                                   ...prev,
@@ -694,12 +697,13 @@ const styles = StyleSheet.create({
                       ) : (
                         <button
                           type="button"
+                          aria-label="Registrar Evidencia Visual usando la cámara del dispositivo"
                           onClick={() => setIsCameraActive(true)}
-                          className="w-full py-4 bg-slate-850 border border-dashed border-slate-750 rounded-2xl flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-white cursor-pointer"
+                          className="w-full py-4 bg-slate-850 border border-dashed border-slate-750 rounded-2xl flex flex-col items-center justify-center gap-1 text-slate-300 hover:text-white cursor-pointer"
                         >
                           <Camera className="w-5 h-5 text-indigo-400" />
-                          <span className="font-sans font-bold text-[10px]">Registrar Evidencia Visual</span>
-                          <span className="text-[8px] font-mono text-slate-500">MIME: IMAGE/JPEG (Compacto)</span>
+                          <span className="font-sans font-bold text-[10px] text-slate-200">Registrar Evidencia Visual</span>
+                          <span className="text-[8px] font-mono text-slate-400">MIME: IMAGE/JPEG (Compacto)</span>
                         </button>
                       )}
                     </div>
@@ -726,6 +730,8 @@ const styles = StyleSheet.create({
                       ref={canvasRef}
                       width={310}
                       height={90}
+                      role="img"
+                      aria-label="Lienzo para firma digital de conformidad. Dibuje su firma aquí con el dedo o el mouse."
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}
@@ -736,9 +742,9 @@ const styles = StyleSheet.create({
                       className="bg-slate-50 opacity-90 cursor-crosshair block w-full touch-none"
                     />
                     {!hasSigned && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-405 text-slate-400 p-2 text-center">
-                        <PenTool className="w-4 h-4 text-slate-500 animate-bounce" />
-                        <span className="text-[9px] font-sans font-medium mt-1">Con el dedo/mouse firme en este recuadro</span>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-slate-200 p-2 text-center">
+                        <PenTool className="w-4 h-4 text-slate-450 animate-bounce" />
+                        <span className="text-[9px] font-sans font-semibold mt-1">Con el dedo/mouse firme en este recuadro</span>
                       </div>
                     )}
                   </div>
@@ -750,6 +756,7 @@ const styles = StyleSheet.create({
               <div className="p-3 bg-slate-950 border-t border-slate-850">
                 <button
                   type="button"
+                  aria-label={isOnline ? "Sincronizar acta de entrega con el servidor central de Piura y finalizar viaje" : "Guardar acta de entrega localmente en la cola offline"}
                   onClick={handleFinalSubmit}
                   className={`w-full py-3.5 rounded-xl font-sans font-black text-xs text-slate-950 cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition-all ${
                     isOnline 

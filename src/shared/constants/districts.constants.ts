@@ -16,6 +16,9 @@ export const PIURA_DISTRICTS: PiuraDistrict[] = [
   'Paita',
   'Talara',
   'Tambogrande',
+  'Ayabaca',
+  'Morropón',
+  'Huancabamba',
 ];
 
 /** Clave base usada para los ítems de localStorage de STARE. */

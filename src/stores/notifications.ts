@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Notification } from '@/types/index';
 import { notificationService } from '@/services/notification';
+import { supabase } from '@/lib/supabase';
 
 interface NotificationState {
   notifications: Notification[];
@@ -10,6 +11,7 @@ interface NotificationState {
   fetchNotifications: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  setupRealtimeListener: () => () => void;
 }
 
 export const useNotificationStore = create<NotificationState>((set) => ({
@@ -56,5 +58,41 @@ export const useNotificationStore = create<NotificationState>((set) => ({
     } catch (err: any) {
       set({ error: err.message || 'Error al marcar todas como leídas', loading: false });
     }
+  },
+
+  setupRealtimeListener: () => {
+    if (!supabase) {
+      // Retornar no-op si Supabase no está configurado (modo mock local)
+      return () => {};
+    }
+
+    const channel = supabase
+      .channel('realtime-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          const newNot = payload.new as Notification;
+          set((state) => {
+            if (state.notifications.some((n) => n.id === newNot.id)) {
+              return state;
+            }
+            const updatedList = [newNot, ...state.notifications];
+            return {
+              notifications: updatedList,
+              unreadCount: updatedList.filter((x) => !x.read).length,
+            };
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase?.removeChannel(channel);
+    };
   },
 }));

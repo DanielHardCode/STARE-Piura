@@ -19,6 +19,7 @@ import { BalanceBrechas } from '../../components/BalanceBrechas';
 import { VoluntarioMobil } from '../../components/VoluntarioMobil';
 import { MypeDirectory } from '../../components/MypeDirectory';
 import { OrganizationManager } from '../../components/OrganizationManager';
+import { EventManager } from '../../components/EventManager';
 
 // New Zustand Stores
 import {
@@ -98,6 +99,13 @@ export function AppRouter() {
     fetchNotifications();
     useDonationStore.getState().fetchDonors();
     useOrganizationStore.getState().fetchOrganizations();
+
+    // Suscribirse a cambios en tiempo real de notificaciones (Fase 8)
+    const unsubscribeNotifications = useNotificationStore.getState().setupRealtimeListener();
+
+    return () => {
+      unsubscribeNotifications();
+    };
   }, [fetchEvents, fetchTransactions, fetchBalances, fetchKPIs, fetchDonations, fetchMypes, fetchNotifications]);
 
   // 3. Map new domain models to components' expected types (Adapter Pattern)
@@ -565,6 +573,80 @@ export function AppRouter() {
                 donationAmounts={donationAmounts}
               />
             </div>
+            
+            {/* FEED LOCAL DE DONACIONES (Reubicado de forma exclusiva en Microdonaciones) */}
+            <section id="mypes-log" className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-5">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                    <Store className="w-5 h-5" />
+                  </span>
+                  <h4 className="font-sans font-bold text-slate-800 text-base">
+                    DIRECTORIO DE MICRODONANTES MYPE AFILIADAS (PIURA)
+                  </h4>
+                </div>
+                <span className="text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 py-1 px-2.5 rounded-full">
+                  {donations.length} Micro-aportes registrados
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {donations.map((don) => {
+                  const connectedEvent = events.find(e => e.id === don.eventId);
+                  return (
+                    <div key={don.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col justify-between hover:shadow-xs transition-all text-xs font-sans relative overflow-hidden">
+                      <div className="text-left">
+                        <div className="flex items-center justify-between gap-1 mb-2">
+                          <div>
+                            <span className="font-bold text-slate-900 text-sm block">{don.mypeName}</span>
+                            <div className="flex gap-2 mt-0.5 text-[9px] font-mono text-slate-400">
+                              {don.phone && <span title="Celular de contacto">📞 {don.phone}</span>}
+                              {don.ruc && <span title="RUC registrado">📋 RUC: {don.ruc}</span>}
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-sans text-slate-500 bg-white border border-slate-100 py-0.5 px-2.5 rounded-full font-semibold shrink-0 h-fit">
+                            {don.mypeCategory}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 text-slate-650">
+                          <p className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {don.district}</p>
+                          {don.method === 'Especie' ? (
+                            <div className="bg-indigo-50/50 border border-indigo-100 p-2 rounded-xl mt-2 text-[11px] text-indigo-950">
+                              <strong>Aporte Físico:</strong>
+                              <ul className="list-disc pl-3.5 mt-0.5 space-y-0.5">
+                                {don.itemsDonated?.map((item, idx) => (
+                                  <li key={idx}>{item.qty} u. de {item.itemName}</li>
+                                ))}
+                              </ul>
+                              {don.receiptFileName && <p className="text-[9px] text-indigo-700 font-mono mt-1">📎 Comprobante: {don.receiptFileName}</p>}
+                            </div>
+                          ) : (
+                            <div className="bg-emerald-50/50 border border-emerald-100 p-2 rounded-xl mt-2 text-[11px] text-emerald-950">
+                              <strong>Aporte Monetario:</strong> S/. {don.amount?.toFixed(2)} vía <span className="font-bold">{don.method}</span>
+                              {don.txNumber && <p className="text-[9px] text-emerald-700 font-mono mt-1">🔑 Op: #{don.txNumber}</p>}
+                              {don.receiptFileName && <p className="text-[9px] text-emerald-700 font-mono mt-0.5">📎 Comprobante: {don.receiptFileName}</p>}
+                            </div>
+                          )}
+                          {don.comment && (
+                            <p className="text-[11px] italic text-slate-505 mt-2 bg-white/50 border border-slate-105 p-1.5 rounded-md leading-relaxed">
+                              "{don.comment}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-dashed border-slate-200/80 flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-slate-400">Canalizado el {don.date}</span>
+                        {connectedEvent && (
+                          <span className="text-amber-600 font-bold max-w-[180px] truncate animate-pulse" title={connectedEvent.title}>
+                            → {connectedEvent.title}
+                          </span>
+                        )}
+                        {don.eventId === 'stock_general' && <span className="text-slate-400 font-bold">📦 Stock General</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           </motion.section>
         )}
 
@@ -581,7 +663,7 @@ export function AppRouter() {
           </motion.section>
         )}
 
-        {/* VOLUNTARIO */}
+        {/* VOLUNTARIO (Oculto del Sidebar/BottomNav pero soportado internamente) */}
         {activeScreen === 'voluntario' && (
           <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <VoluntarioMobil events={events} onCompleteEvent={handleCompleteEvent} />
@@ -591,83 +673,17 @@ export function AppRouter() {
         {/* ORGANIZACIONES */}
         {activeScreen === 'organizaciones' && (
           <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-slate-800">
-            <OrganizationManager onSyncGlobalEvent={handleAddEvent} />
+            <OrganizationManager />
           </motion.section>
         )}
 
-        {/* FEED GLOBAL DE DONACIONES */}
-        <section id="mypes-log" className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-5">
-            <div className="flex items-center gap-2">
-              <span className="p-2 bg-amber-50 text-amber-600 rounded-xl">
-                <Store className="w-5 h-5" />
-              </span>
-              <h4 className="font-sans font-bold text-slate-800 text-base">
-                DIRECTORIO DE MICRODONANTES MYPE AFILIADAS (PIURA)
-              </h4>
-            </div>
-            <span className="text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 py-1 px-2.5 rounded-full">
-              {donations.length} Micro-aportes registrados
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {donations.map((don) => {
-              const connectedEvent = events.find(e => e.id === don.eventId);
-              return (
-                <div key={don.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col justify-between hover:shadow-xs transition-all text-xs font-sans relative overflow-hidden">
-                  <div>
-                    <div className="flex items-center justify-between gap-1 mb-2">
-                      <div>
-                        <span className="font-bold text-slate-900 text-sm block">{don.mypeName}</span>
-                        <div className="flex gap-2 mt-0.5 text-[9px] font-mono text-slate-400">
-                          {don.phone && <span title="Celular de contacto">📞 {don.phone}</span>}
-                          {don.ruc && <span title="RUC registrado">📋 RUC: {don.ruc}</span>}
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-sans text-slate-500 bg-white border border-slate-100 py-0.5 px-2.5 rounded-full font-semibold shrink-0 h-fit">
-                        {don.mypeCategory}
-                      </span>
-                    </div>
-                    <div className="space-y-1.5 text-slate-600">
-                      <p className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {don.district}</p>
-                      {don.method === 'Especie' ? (
-                        <div className="bg-indigo-50/50 border border-indigo-100 p-2 rounded-xl mt-2 text-[11px] text-indigo-950">
-                          <strong>Aporte Físico:</strong>
-                          <ul className="list-disc pl-3.5 mt-0.5 space-y-0.5">
-                            {don.itemsDonated?.map((item, idx) => (
-                              <li key={idx}>{item.qty} u. de {item.itemName}</li>
-                            ))}
-                          </ul>
-                          {don.receiptFileName && <p className="text-[9px] text-indigo-700 font-mono mt-1">📎 Comprobante: {don.receiptFileName}</p>}
-                        </div>
-                      ) : (
-                        <div className="bg-emerald-50/50 border border-emerald-100 p-2 rounded-xl mt-2 text-[11px] text-emerald-950">
-                          <strong>Aporte Monetario:</strong> S/. {don.amount?.toFixed(2)} vía <span className="font-bold">{don.method}</span>
-                          {don.txNumber && <p className="text-[9px] text-emerald-700 font-mono mt-1">🔑 Op: #{don.txNumber}</p>}
-                          {don.receiptFileName && <p className="text-[9px] text-emerald-700 font-mono mt-0.5">📎 Comprobante: {don.receiptFileName}</p>}
-                        </div>
-                      )}
-                      {don.comment && (
-                        <p className="text-[11px] italic text-slate-500 mt-2 bg-white/50 border border-slate-100 p-1.5 rounded-md leading-relaxed">
-                          "{don.comment}"
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-2.5 border-t border-dashed border-slate-200/80 flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-slate-400">Canalizado el {don.date}</span>
-                    {connectedEvent && (
-                      <span className="text-amber-600 font-bold max-w-[180px] truncate" title={connectedEvent.title}>
-                        → {connectedEvent.title}
-                      </span>
-                    )}
-                    {don.eventId === 'stock_general' && <span className="text-slate-400 font-bold">📦 Stock General</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        {/* EVENTOS */}
+        {activeScreen === 'eventos' && (
+          <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-slate-800">
+            <EventManager />
+          </motion.section>
+        )}
+
       </div>
     </AppLayout>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MypeProfile, PiuraDistrict } from '../types';
+import { PiuraDistrict, MypeRubro } from '@/types/index';
+import { MypeProfile } from '../features/mypes';
 import { 
   Building2, 
   Store, 
@@ -15,11 +16,15 @@ import {
   UserCheck, 
   CheckCircle,
   HelpCircle,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  X,
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useMypes } from '../features/mypes';
 import { useDonations } from '../features/donations';
+import { useMypeStore } from '@/stores/mypes';
 
 interface MypeDirectoryProps {
   mypes?: MypeProfile[];
@@ -34,7 +39,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
   onRegisterMype: propOnRegisterMype,
   onSelectMypeForDonation: propOnSelectMypeForDonation,
   donationCounts: propDonationCounts,
-  donationAmounts: propDonationAmounts
+  donationAmounts: propOnDonationAmounts
 }) => {
   const { mypes: hookMypes, registerMype: hookRegisterMype, selectMypeForDonation: hookSelectMypeForDonation } = useMypes();
   const { getDonationMetrics } = useDonations();
@@ -44,23 +49,39 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
   const onRegisterMype = propOnRegisterMype || hookRegisterMype;
   const onSelectMypeForDonation = propOnSelectMypeForDonation || hookSelectMypeForDonation;
   const donationCounts = propDonationCounts || hookCounts;
-  const donationAmounts = propDonationAmounts || hookAmounts;
-  // Form State
+  const donationAmounts = propOnDonationAmounts || hookAmounts;
+
+  // Form State (New Mype)
   const [name, setName] = useState('');
   const [ruc, setRuc] = useState('');
   const [phone, setPhone] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [district, setDistrict] = useState<PiuraDistrict>('Piura Centro');
-  const [category, setCategory] = useState('Bodega');
+  const [category, setCategory] = useState<MypeRubro>('Bodega');
   
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrictFilter, setSelectedDistrictFilter] = useState<string>('todos');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('todos');
+
+  // Paginación de 10 en 10
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [visibleCount, setVisibleCount] = useState<number>(10);
 
   // Local feedback & validation
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  // Modal de Edición de Mype
+  const [editingMype, setEditingMype] = useState<MypeProfile | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editRuc, setEditRuc] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editContactPerson, setEditContactPerson] = useState('');
+  const [editDistrict, setEditDistrict] = useState<PiuraDistrict>('Piura Centro');
+  const [editCategory, setEditCategory] = useState<MypeRubro>('Bodega');
+  const [editErrorMsg, setEditErrorMsg] = useState<string | null>(null);
 
   const MYPE_CATEGORIES = [
     { value: 'Bodega', label: 'Bodega de Barrio' },
@@ -71,6 +92,62 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
     { value: 'Transporte', label: 'Asociación de Mototaxis / Fletes' },
     { value: 'Otro', label: 'Otro Comercio Vecinal' }
   ];
+
+  // Open edit modal and load data
+  const handleOpenEdit = (mype: MypeProfile) => {
+    setEditingMype(mype);
+    setEditName(mype.name);
+    setEditRuc(mype.ruc || '');
+    setEditPhone(mype.phone || '');
+    setEditContactPerson(mype.contactPerson || '');
+    setEditDistrict(mype.district);
+    setEditCategory((mype.category as MypeRubro) || 'Bodega');
+    setEditErrorMsg(null);
+  };
+
+  // Submit update
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditErrorMsg(null);
+
+    if (!editName.trim()) {
+      setEditErrorMsg('La Razón Social es obligatoria.');
+      return;
+    }
+
+    if (editRuc && editRuc !== 'PJ-SIN-RUC' && (editRuc.length !== 11 || !/^\d+$/.test(editRuc))) {
+      setEditErrorMsg('El RUC debe constar de 11 dígitos.');
+      return;
+    }
+
+    if (editPhone && editPhone !== 'Sin número' && (editPhone.length !== 9 || !editPhone.startsWith('9') || !/^\d+$/.test(editPhone))) {
+      setEditErrorMsg('El celular debe iniciar con 9 y tener 9 dígitos.');
+      return;
+    }
+
+    try {
+      await useMypeStore.getState().updateMype(editingMype!.id, {
+        razon_social: editName.trim(),
+        ruc: editRuc,
+        contacto: editContactPerson.trim(),
+        telefono: editPhone,
+        distrito: editDistrict,
+        rubro: editCategory
+      });
+
+      setSuccessMsg(`✅ ¡MYPE "${editName.trim()}" actualizada con éxito!`);
+      setEditingMype(null);
+
+      // Refrescar datos
+      await useMypeStore.getState().fetchMypes();
+
+      setTimeout(() => {
+        setSuccessMsg(null);
+      }, 4000);
+    } catch (err: any) {
+      setEditErrorMsg(err.message || 'Error al actualizar la MYPE.');
+    }
+  };
 
   // Validate and submit new Mype
   const handleSubmit = (e: React.FormEvent) => {
@@ -138,14 +215,23 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
     const matchesSearch = 
       m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
       m.ruc.includes(searchQuery) ||
-      m.contactPerson.toLowerCase().includes(searchQuery.toLowerCase());
+      (m.contactPerson && m.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesDistrict = 
       selectedDistrictFilter === 'todos' || 
       m.district === selectedDistrictFilter;
 
-    return matchesSearch && matchesDistrict;
+    const matchesCategory = 
+      selectedCategoryFilter === 'todos' || 
+      m.category === selectedCategoryFilter;
+
+    return matchesSearch && matchesDistrict && matchesCategory;
   });
+
+  // Paginación lógica
+  const displayedMypes = pageSize === -1 
+    ? filteredMypes 
+    : filteredMypes.slice(0, visibleCount);
 
   return (
     <div className="bg-white border border-slate-100 rounded-3xl p-6 lg:p-8 shadow-sm transition-all space-y-6">
@@ -305,7 +391,6 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                   <option value="Sechura">Sechura</option>
                   <option value="Paita">Paita</option>
                   <option value="Talara">Talara</option>
-                  <option value="Tambogrande">Tambogrande</option>
                 </select>
               </div>
 
@@ -316,7 +401,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 </label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => setCategory(e.target.value as MypeRubro)}
                   className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
                 >
                   {MYPE_CATEGORIES.map(cat => (
@@ -337,7 +422,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
               </button>
               <button
                 type="submit"
-                className="py-2 px-6 bg-indigo-600 hover:bg-indigo-750 hover:bg-indigo-700 text-white font-sans font-bold text-xs rounded-xl transition-all cursor-pointer shadow-2xs"
+                className="py-2 px-6 bg-indigo-600 hover:bg-indigo-755 hover:bg-indigo-700 text-white font-sans font-bold text-xs rounded-xl transition-all cursor-pointer shadow-2xs"
               >
                 Completar Afiliación Zonal
               </button>
@@ -350,25 +435,31 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
         
         {/* Search input */}
-        <div className="sm:col-span-8 relative">
+        <div className="sm:col-span-6 relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Buscar por Razón Social, RUC o Representante..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setVisibleCount(pageSize); // reset visible count
+            }}
             className="w-full text-xs py-2.5 px-3 pl-9 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-hidden text-slate-800"
           />
         </div>
 
         {/* District Filter Selector */}
-        <div className="sm:col-span-4 select-wrapper">
+        <div className="sm:col-span-3 select-wrapper">
           <select
             value={selectedDistrictFilter}
-            onChange={(e) => setSelectedDistrictFilter(e.target.value)}
+            onChange={(e) => {
+              setSelectedDistrictFilter(e.target.value);
+              setVisibleCount(pageSize);
+            }}
             className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
           >
-            <option value="todos">🚚 Todos los Distritos (Filtro)</option>
+            <option value="todos">🚚 Todos los Distritos</option>
             <option value="Piura Centro">Piura Centro</option>
             <option value="Catacaos">Catacaos</option>
             <option value="Castilla">Castilla</option>
@@ -381,18 +472,57 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
           </select>
         </div>
 
+        {/* Category Filter Selector */}
+        <div className="sm:col-span-3 select-wrapper">
+          <select
+            value={selectedCategoryFilter}
+            onChange={(e) => {
+              setSelectedCategoryFilter(e.target.value);
+              setVisibleCount(pageSize);
+            }}
+            className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+          >
+            <option value="todos">🏪 Todos los Rubros</option>
+            {MYPE_CATEGORIES.map(cat => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
+            ))}
+          </select>
+        </div>
+
+      </div>
+
+      {/* Paginación selector bar */}
+      <div className="flex items-center justify-between text-xs font-mono text-slate-400 border-b border-slate-100 pb-2">
+        <span>Mostrando {displayedMypes.length} de {filteredMypes.length} MYPEs encontradas</span>
+        <div className="flex items-center gap-2">
+          <span>Ver:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              const size = parseInt(e.target.value);
+              setPageSize(size);
+              setVisibleCount(size === -1 ? filteredMypes.length : size);
+            }}
+            className="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 font-bold focus:outline-hidden cursor-pointer"
+          >
+            <option value={10}>10 en 10</option>
+            <option value={20}>20 en 20</option>
+            <option value={50}>50 en 50</option>
+            <option value={-1}>Todos</option>
+          </select>
+        </div>
       </div>
 
       {/* LIST OF REGISTERED MYPES CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredMypes.length === 0 ? (
+        {displayedMypes.length === 0 ? (
           <div className="col-span-full py-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-3xl text-sm text-slate-400 font-sans space-y-1">
             <HelpCircle className="w-8 h-8 text-slate-350 mx-auto" />
             <p className="font-bold">No se encontraron MYPEs registradas</p>
             <p className="text-xs">Ajuste los términos de búsqueda o afilie un nuevo comercio local.</p>
           </div>
         ) : (
-          filteredMypes.map(m => {
+          displayedMypes.map(m => {
             const qtyDonations = donationCounts[m.name] || 0;
             const totalMoney = donationAmounts[m.name] || 0;
 
@@ -404,7 +534,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 
                 {/* Header card metrics */}
                 <div className="flex items-start justify-between gap-2.5">
-                  <div className="space-y-1 max-w-[70%]">
+                  <div className="space-y-1 max-w-[70%] text-left">
                     <span className="bg-indigo-50 text-indigo-700 font-mono font-bold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">
                       {m.category}
                     </span>
@@ -439,7 +569,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 </div>
 
                 {/* Tech footer details */}
-                <div className="text-xs space-y-1 text-slate-500 font-sans">
+                <div className="text-xs space-y-1 text-slate-550 text-slate-500 font-sans text-left">
                   <div className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span><strong>RUC:</strong> {m.ruc}</span>
@@ -454,21 +584,187 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                   </div>
                 </div>
 
-                {/* Fast Trigger Donation Action (Integrated and highly supportive) */}
-                <button
-                  type="button"
-                  onClick={() => onSelectMypeForDonation(m)}
-                  className="w-full text-center bg-white hover:bg-indigo-600 hover:text-white border border-slate-200/80 hover:border-transparent text-indigo-700 py-2.5 px-3 rounded-xl font-sans font-bold text-xs cursor-pointer transition-all flex items-center justify-center gap-1.5"
-                >
-                  <Coins className="w-4 h-4 shrink-0" />
-                  Donar con esta MYPE
-                </button>
+                {/* Card Actions (Donate + Edit) */}
+                <div className="flex items-stretch gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => onSelectMypeForDonation(m)}
+                    className="flex-1 text-center bg-white hover:bg-indigo-600 hover:text-white border border-slate-200/80 hover:border-transparent text-indigo-700 py-2.5 px-3 rounded-xl font-sans font-bold text-xs cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <Coins className="w-4 h-4 shrink-0" />
+                    Donar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(m)}
+                    title="Editar Comercio MYPE"
+                    className="px-3 bg-slate-100 hover:bg-slate-200 border border-slate-200/60 rounded-xl text-slate-600 transition-colors flex items-center justify-center cursor-pointer shadow-3xs"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                </div>
 
               </div>
             );
           })
         )}
       </div>
+
+      {/* Button to load more */}
+      {pageSize !== -1 && filteredMypes.length > visibleCount && (
+        <div className="pt-2 text-center">
+          <button
+            onClick={() => setVisibleCount(prev => Math.min(prev + pageSize, filteredMypes.length))}
+            className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-sans font-bold text-xs uppercase rounded-xl transition-all shadow-sm cursor-pointer"
+          >
+            Ver más MYPEs (+{Math.min(pageSize, filteredMypes.length - visibleCount)})
+          </button>
+        </div>
+      )}
+
+      {/* EDIT MODAL DIALOG (GLASS TRANSLUCENT) */}
+      <AnimatePresence>
+        {editingMype && (
+          <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="glass p-6 rounded-3xl max-w-lg w-full relative border border-white/10 shadow-2xl text-slate-800"
+            >
+              <button
+                onClick={() => setEditingMype(null)}
+                className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
+
+              <div className="flex items-center gap-2 mb-4">
+                <Store className="w-5 h-5 text-indigo-600" />
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                  Editar Comercio: {editingMype.name}
+                </h4>
+              </div>
+
+              {editErrorMsg && (
+                <div className="p-3 bg-rose-50 border border-rose-100 text-rose-850 rounded-xl text-xs flex items-center gap-1.5 mb-4">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <p className="font-medium">{editErrorMsg}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleUpdateSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                    Razón Social / Nombre Comercial
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                      Número de RUC
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={11}
+                      value={editRuc}
+                      onChange={(e) => setEditRuc(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-mono text-slate-800 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                      Celular (Yape/Plin)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={9}
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                      Distrito
+                    </label>
+                    <select
+                      value={editDistrict}
+                      onChange={(e) => setEditDistrict(e.target.value as PiuraDistrict)}
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                    >
+                      <option value="Piura Centro">Piura Centro</option>
+                      <option value="Catacaos">Catacaos (Bajo Piura)</option>
+                      <option value="Castilla">Castilla</option>
+                      <option value="Veintiséis de Octubre">Veintiséis de Octubre</option>
+                      <option value="Tambogrande">Tambogrande (Alto Piura)</option>
+                      <option value="Chulucanas">Chulucanas</option>
+                      <option value="Sechura">Sechura</option>
+                      <option value="Paita">Paita</option>
+                      <option value="Talara">Talara</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                      Rubro
+                    </label>
+                    <select
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value as MypeRubro)}
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                    >
+                      {MYPE_CATEGORIES.map(cat => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                    Persona de Contacto
+                  </label>
+                  <input
+                    type="text"
+                    value={editContactPerson}
+                    onChange={(e) => setEditContactPerson(e.target.value)}
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditingMype(null)}
+                    className="py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-600 transition-colors cursor-pointer"
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    type="submit"
+                    className="py-2 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Guardar Cambios
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

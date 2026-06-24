@@ -17,5 +17,6 @@ export type ActiveScreen =
   | 'dashboard'
   | 'captacion'
   | 'balance'
-  | 'voluntario'
-  | 'organizaciones';
+  | 'voluntario' // Se mantiene internamente pero se oculta del menú
+  | 'organizaciones'
+  | 'eventos'; // Nueva sección independiente

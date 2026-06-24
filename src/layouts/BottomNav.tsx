@@ -36,8 +36,8 @@ const navItems: Array<{
   { id: 'dashboard',      label: 'Inicio',         icon: LayoutDashboard },
   { id: 'captacion',      label: 'Donaciones',     icon: HandHeart },
   { id: 'balance',        label: 'Balance',        icon: BarChart3 },
-  { id: 'voluntario',     label: 'Visitas',        icon: CalendarDays },
   { id: 'organizaciones', label: 'Orgs.',          icon: Building2 },
+  { id: 'eventos',        label: 'Eventos',        icon: CalendarDays },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
