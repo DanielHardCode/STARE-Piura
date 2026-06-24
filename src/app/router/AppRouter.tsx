@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Store, MapPin } from 'lucide-react';
 import { ActiveScreen } from '../config/app.config';
-import { AppLayout } from '../layouts/AppLayout';
+import { AppLayout } from '@/layouts/AppLayout';
 
 // Feature imports (Components)
 import { KPICards } from '../../components/KPICards';
@@ -27,7 +27,8 @@ import {
   useDonationStore,
   useMypeStore,
   useOrganizationStore,
-  useNotificationStore
+  useNotificationStore,
+  useAuthStore
 } from '@/stores';
 
 // Types (Keep for compatibility with components)
@@ -41,6 +42,15 @@ export function AppRouter() {
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedMypeToDonate, setSelectedMypeToDonate] = useState<any | null>(null);
+
+  const { user } = useAuthStore();
+
+  // Route guard: Redirigir a 'dashboard' si un no-admin intenta entrar a la pantalla de Balance
+  useEffect(() => {
+    if (activeScreen === 'balance' && user?.role !== 'admin') {
+      setActiveScreen('dashboard');
+    }
+  }, [activeScreen, user]);
 
   // 1. Consume Zustand stores
   const {
@@ -56,10 +66,16 @@ export function AppRouter() {
   const {
     transactions: newTransactions,
     balances: newBalances,
+    kpis,
     fetchTransactions,
     fetchBalances,
     fetchKPIs,
   } = useFinanceStore();
+
+  const {
+    notifications,
+    fetchNotifications,
+  } = useNotificationStore();
 
   const {
     donations: newDonations,
@@ -79,10 +95,10 @@ export function AppRouter() {
     fetchKPIs();
     fetchDonations();
     fetchMypes();
+    fetchNotifications();
     useDonationStore.getState().fetchDonors();
-    useNotificationStore.getState().fetchNotifications();
     useOrganizationStore.getState().fetchOrganizations();
-  }, [fetchEvents, fetchTransactions, fetchBalances, fetchKPIs, fetchDonations, fetchMypes]);
+  }, [fetchEvents, fetchTransactions, fetchBalances, fetchKPIs, fetchDonations, fetchMypes, fetchNotifications]);
 
   // 3. Map new domain models to components' expected types (Adapter Pattern)
   const events: SocialEvent[] = newEvents.map((evt) => ({
@@ -417,19 +433,54 @@ export function AppRouter() {
   const selectMypeForDonation = (mype: any) => setSelectedMypeToDonate(mype);
   const clearSelectedMype = () => setSelectedMypeToDonate(null);
 
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+
   return (
     <AppLayout
       activeScreen={activeScreen}
       onNavigate={setActiveScreen}
-      mobileMenuOpen={mobileMenuOpen}
-      onToggleMobileMenu={() => setMobileMenuOpen(prev => !prev)}
-      overallCoveragePct={overallCoveragePct}
+      notificationCount={unreadNotificationsCount}
     >
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8 space-y-8">
+      <div className="space-y-8">
 
         {/* DASHBOARD */}
         {activeScreen === 'dashboard' && (
           <>
+            {/* Tarjetas de KPIs Generales (Fase 7 - Command Center de Datos Reales) */}
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Cobertura Global */}
+              <motion.div whileHover={{ y: -2 }} className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-5 shadow-[var(--shadow-sm)] flex flex-col justify-between">
+                <div>
+                  <p className="text-[10px] font-mono font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Cobertura Global</p>
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mt-1">{kpis?.cobertura_bolsas_pct ?? 0}%</h3>
+                </div>
+                <div className="w-full h-1.5 bg-[var(--color-bg-secondary)] rounded-full mt-3 overflow-hidden">
+                  <div className="h-full bg-teal-500 rounded-full" style={{ width: `${kpis?.cobertura_bolsas_pct ?? 0}%` }} />
+                </div>
+              </motion.div>
+              
+              {/* Microdonaciones Mes */}
+              <motion.div whileHover={{ y: -2 }} className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-5 shadow-[var(--shadow-sm)]">
+                <p className="text-[10px] font-mono font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Donaciones del Mes</p>
+                <h3 className="text-2xl font-bold text-emerald-600 mt-1">S/. {kpis?.total_donaciones_mes.toFixed(2) ?? '0.00'}</h3>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] mt-2">{kpis?.total_donaciones_count_mes ?? 0} transacciones recibidas</p>
+              </motion.div>
+
+              {/* MYPEs Aliadas Activas */}
+              <motion.div whileHover={{ y: -2 }} className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-5 shadow-[var(--shadow-sm)]">
+                <p className="text-[10px] font-mono font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">MYPEs Aliadas</p>
+                <h3 className="text-2xl font-bold text-amber-500 mt-1">{newMypes.filter(m => m.activo).length} activas</h3>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] mt-2">De {newMypes.length} registradas en Piura</p>
+              </motion.div>
+
+              {/* Visitas del Mes */}
+              <motion.div whileHover={{ y: -2 }} className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-[var(--radius-xl)] p-5 shadow-[var(--shadow-sm)]">
+                <p className="text-[10px] font-mono font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Visitas de Campo</p>
+                <h3 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{kpis?.visitas_realizadas_mes ?? 0} de { (kpis?.visitas_programadas_mes ?? 0) + (kpis?.visitas_realizadas_mes ?? 0) }</h3>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] mt-2">{kpis?.beneficiarios_alcanzados_mes ?? 0} beneficiarios alcanzados</p>
+              </motion.div>
+            </section>
+
             <section id="funds-section-wrapper" className="space-y-3">
               <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2">
                 <h2 className="text-sm font-mono font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
@@ -617,7 +668,7 @@ export function AppRouter() {
             })}
           </div>
         </section>
-      </main>
+      </div>
     </AppLayout>
   );
 }

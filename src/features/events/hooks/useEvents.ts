@@ -1,96 +1,144 @@
-/**
- * @file useEvents.ts
- * @description Hook de gestión de estado para la feature de Eventos Sociales.
- * Encapsula todo el estado y los handlers relacionados con eventos y bolsas.
- */
-import { useState } from 'react';
-import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
+import { useEventStore, useFinanceStore } from '@/stores';
 import { SocialEvent, BolsaItem } from '../types/event.types';
-import { INITIAL_EVENTS } from '../data/events.seed';
-import { SIMULATED_TODAY } from '../../../shared/constants/districts.constants';
 
 export function useEvents() {
-  const [events, setEvents] = useLocalStorage<SocialEvent[]>('stare_events', INITIAL_EVENTS);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(
-    () => INITIAL_EVENTS[0]?.id || null
-  );
+  const {
+    events: storeEvents,
+    selectedEventId,
+    setSelectedEventId,
+    addEvent: storeAddEvent,
+    updateEvent: storeUpdateEvent,
+    updateSupplyItem: storeUpdateSupplyItem,
+    fetchEvents,
+  } = useEventStore();
+
+  const {
+    addTransaction: storeAddTransaction,
+    fetchBalances,
+    fetchTransactions,
+    fetchKPIs,
+  } = useFinanceStore();
+
+  // Adapter Pattern: Mapear del store al tipo de UI SocialEvent
+  const events: SocialEvent[] = storeEvents.map((evt) => ({
+    id: evt.id,
+    title: evt.title,
+    description: evt.description || '',
+    date: evt.start_time.split('T')[0],
+    district: evt.distrito as any,
+    targetAudience: evt.target_audience,
+    status: evt.status === 'realizada'
+      ? 'completado'
+      : evt.status === 'en_curso'
+      ? 'en_progreso'
+      : evt.status === 'cancelada'
+      ? 'cancelado'
+      : 'programado',
+    itemsBolsa: evt.supply_items.map((item) => ({
+      id: item.id,
+      name: item.nombre,
+      unit: item.unidad,
+      targetQty: item.cantidad_requerida,
+      currentQty: item.cantidad_cubierta,
+      unitPriceEstimate: item.precio_unitario_estimado,
+    })),
+  }));
 
   /** Agrega un nuevo evento social al listado. */
-  const addEvent = (newEvent: SocialEvent) => {
-    setEvents(prev => [...prev, newEvent]);
-    setSelectedEventId(newEvent.id);
+  const addEvent = async (newEvent: SocialEvent) => {
+    await storeAddEvent({
+      title: newEvent.title,
+      description: newEvent.description,
+      distrito: newEvent.district as any,
+      target_audience: newEvent.targetAudience,
+      start_time: `${newEvent.date}T09:00:00`,
+      end_time: `${newEvent.date}T17:00:00`,
+    });
+    await fetchEvents();
   };
 
-  /** Marca un evento como completado (usado por el voluntario móvil). */
-  const completeEvent = (eventId: string) => {
-    setEvents(prev =>
-      prev.map(evt =>
-        evt.id === eventId ? { ...evt, status: 'completado' } : evt
-      )
-    );
+  /** Marca un evento como completado. */
+  const completeEvent = async (eventId: string) => {
+    await storeUpdateEvent(eventId, {
+      status: 'realizada',
+    });
+    await fetchEvents();
   };
 
   /**
    * Actualiza la cantidad actual de ítems de una bolsa a partir de donaciones en especie.
    */
-  const updateBolsaFromDonation = (
+  const updateBolsaFromDonation = async (
     eventId: string,
     itemsDonated: { itemName: string; qty: number }[]
   ) => {
     if (eventId === 'stock_general') return;
-    setEvents(prev =>
-      prev.map(evt => {
-        if (evt.id !== eventId) return evt;
-        const updatedItems = evt.itemsBolsa.map(item => {
-          const match = itemsDonated.find(ap => ap.itemName === item.name);
-          return match ? { ...item, currentQty: item.currentQty + match.qty } : item;
+    const targetEvt = storeEvents.find(e => e.id === eventId);
+    if (!targetEvt) return;
+
+    for (const item of itemsDonated) {
+      const matchingSupplyItem = targetEvt.supply_items.find(s => s.nombre === item.itemName);
+      if (matchingSupplyItem) {
+        await storeUpdateSupplyItem(matchingSupplyItem.id, {
+          cantidad_cubierta: matchingSupplyItem.cantidad_cubierta + item.qty,
         });
-        return { ...evt, itemsBolsa: updatedItems };
-      })
-    );
+      }
+    }
+    await fetchEvents();
   };
 
   /**
    * Balancea el inventario de una bolsa usando el fondo de adquisición.
-   * @returns Resultado con monto gastado y mensaje descriptivo.
    */
-  const balanceInventory = (
+  const balanceInventory = async (
     eventId: string,
     maxBudget: number,
     availableFund: number
-  ): { success: boolean; spent: number; msg: string } => {
-    const targetEvent = events.find(e => e.id === eventId);
+  ): Promise<{ success: boolean; spent: number; msg: string }> => {
+    const targetEvent = storeEvents.find(e => e.id === eventId);
     if (!targetEvent) return { success: false, spent: 0, msg: 'Hito no encontrado' };
     if (maxBudget > availableFund) return { success: false, spent: 0, msg: 'Presupuesto excede el Fondo de Adquisición' };
 
     let remaining = maxBudget;
     let spent = 0;
-    const trace: string[] = [];
 
-    const updatedEvents = events.map(evt => {
-      if (evt.id !== eventId) return evt;
-      const updatedItems = evt.itemsBolsa.map((item: BolsaItem) => {
-        const deficit = Math.max(0, item.targetQty - item.currentQty);
-        if (deficit <= 0) return item;
-        const maxAffordable = Math.floor(remaining / item.unitPriceEstimate);
-        const buyQty = Math.min(deficit, maxAffordable);
-        if (buyQty > 0) {
-          const cost = buyQty * item.unitPriceEstimate;
-          remaining -= cost;
-          spent += cost;
-          trace.push(`${buyQty} ${item.unit} de ${item.name}`);
-          return { ...item, currentQty: item.currentQty + buyQty };
-        }
-        return item;
-      });
-      return { ...evt, itemsBolsa: updatedItems };
-    });
+    for (const item of targetEvent.supply_items) {
+      const deficit = Math.max(0, item.cantidad_requerida - item.cantidad_cubierta);
+      if (deficit <= 0) continue;
+      const maxAffordable = Math.floor(remaining / item.precio_unitario_estimado);
+      const buyQty = Math.min(deficit, maxAffordable);
+      if (buyQty > 0) {
+        const cost = buyQty * item.precio_unitario_estimado;
+        remaining -= cost;
+        spent += cost;
+
+        await storeUpdateSupplyItem(item.id, {
+          cantidad_cubierta: item.cantidad_cubierta + buyQty,
+        });
+      }
+    }
 
     if (spent === 0) {
       return { success: false, spent: 0, msg: 'El monto ingresado es menor que el valor de una sola unidad de los insumos restantes.' };
     }
 
-    setEvents(updatedEvents);
+    // Registrar egreso en Kardex
+    await storeAddTransaction({
+      tipo: 'egreso',
+      concepto: `Balanceo Bolsa de [${targetEvent.title}]: compensación automática.`,
+      monto: spent,
+      fondo: 'fondo_adquisicion',
+      fecha: new Date().toISOString().split('T')[0],
+    });
+
+    // Refrescar
+    await Promise.all([
+      fetchBalances(),
+      fetchTransactions(),
+      fetchKPIs(),
+      fetchEvents(),
+    ]);
+
     return {
       success: true,
       spent,
@@ -101,22 +149,37 @@ export function useEvents() {
   /**
    * Compra directa de un ítem específico de una bolsa.
    */
-  const directBuyItem = (
+  const directBuyItem = async (
     eventId: string,
     itemId: string,
     qtyToBuy: number
   ) => {
-    setEvents(prev =>
-      prev.map(evt => {
-        if (evt.id !== eventId) return evt;
-        const updatedItems = evt.itemsBolsa.map(item =>
-          item.id === itemId
-            ? { ...item, currentQty: item.currentQty + qtyToBuy }
-            : item
-        );
-        return { ...evt, itemsBolsa: updatedItems };
-      })
-    );
+    const targetEvent = storeEvents.find(e => e.id === eventId);
+    const targetItem = targetEvent?.supply_items.find(s => s.id === itemId);
+
+    if (targetItem) {
+      const cost = qtyToBuy * targetItem.precio_unitario_estimado;
+      // egreso
+      await storeAddTransaction({
+        tipo: 'egreso',
+        concepto: `Inyección Compensatoria: Adquisición de ${qtyToBuy}u de "${targetItem.nombre}" para cerrar brecha.`,
+        monto: cost,
+        fondo: 'fondo_adquisicion',
+        fecha: new Date().toISOString().split('T')[0],
+      });
+
+      // stock
+      await storeUpdateSupplyItem(itemId, {
+        cantidad_cubierta: targetItem.cantidad_cubierta + qtyToBuy,
+      });
+
+      await Promise.all([
+        fetchBalances(),
+        fetchTransactions(),
+        fetchKPIs(),
+        fetchEvents(),
+      ]);
+    }
   };
 
   // Métricas derivadas
@@ -142,9 +205,7 @@ export function useEvents() {
     updateBolsaFromDonation,
     balanceInventory,
     directBuyItem,
-    // Métricas
     pendingEventsCount,
     overallCoveragePct,
-    SIMULATED_TODAY,
   };
 }

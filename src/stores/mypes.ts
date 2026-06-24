@@ -4,15 +4,18 @@ import { mypeService } from '@/services/mype';
 
 interface MypeState {
   mypes: Mype[];
+  selectedMypeToDonate: Mype | null;
   loading: boolean;
   error: string | null;
   fetchMypes: () => Promise<void>;
   addMype: (dto: CreateMypeDTO) => Promise<Mype>;
   updateMype: (id: string, dto: UpdateMypeDTO) => Promise<Mype>;
+  setSelectedMypeToDonate: (mype: Mype | null) => void;
 }
 
 export const useMypeStore = create<MypeState>((set) => ({
   mypes: [],
+  selectedMypeToDonate: null,
   loading: false,
   error: null,
 
@@ -54,5 +57,9 @@ export const useMypeStore = create<MypeState>((set) => ({
       set({ error: err.message || 'Error al actualizar MYPE', loading: false });
       throw err;
     }
+  },
+
+  setSelectedMypeToDonate: (mype) => {
+    set({ selectedMypeToDonate: mype });
   },
 }));

@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { springs } from '@/animations/variants';
 import type { ActiveScreen } from '@/app/config/app.config';
+import { useAuthStore } from '@/stores/auth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,15 @@ const navItems: Array<{
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
+  const { user } = useAuthStore();
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.id === 'balance') {
+      return user?.role === 'admin';
+    }
+    return true;
+  });
+
   return (
     <nav
       className={cn(
@@ -55,7 +65,7 @@ export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
       aria-label="Navegación principal"
     >
       <div className="flex items-stretch h-16">
-        {navItems.map((item) => {
+        {filteredNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeScreen === item.id;
 

@@ -18,22 +18,33 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useMypes } from '../features/mypes';
+import { useDonations } from '../features/donations';
 
 interface MypeDirectoryProps {
-  mypes: MypeProfile[];
-  onRegisterMype: (newMype: MypeProfile) => void;
-  onSelectMypeForDonation: (mype: MypeProfile) => void;
-  donationCounts: Record<string, number>; // Maps mypeName to count of donations
-  donationAmounts: Record<string, number>; // Maps mypeName to total financial sum
+  mypes?: MypeProfile[];
+  onRegisterMype?: (newMype: MypeProfile) => void;
+  onSelectMypeForDonation?: (mype: MypeProfile) => void;
+  donationCounts?: Record<string, number>; // Maps mypeName to count of donations
+  donationAmounts?: Record<string, number>; // Maps mypeName to total financial sum
 }
 
 export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
-  mypes,
-  onRegisterMype,
-  onSelectMypeForDonation,
-  donationCounts,
-  donationAmounts
+  mypes: propMypes,
+  onRegisterMype: propOnRegisterMype,
+  onSelectMypeForDonation: propOnSelectMypeForDonation,
+  donationCounts: propDonationCounts,
+  donationAmounts: propDonationAmounts
 }) => {
+  const { mypes: hookMypes, registerMype: hookRegisterMype, selectMypeForDonation: hookSelectMypeForDonation } = useMypes();
+  const { getDonationMetrics } = useDonations();
+  const { counts: hookCounts, amounts: hookAmounts } = getDonationMetrics();
+
+  const mypes = propMypes || hookMypes;
+  const onRegisterMype = propOnRegisterMype || hookRegisterMype;
+  const onSelectMypeForDonation = propOnSelectMypeForDonation || hookSelectMypeForDonation;
+  const donationCounts = propDonationCounts || hookCounts;
+  const donationAmounts = propDonationAmounts || hookAmounts;
   // Form State
   const [name, setName] = useState('');
   const [ruc, setRuc] = useState('');

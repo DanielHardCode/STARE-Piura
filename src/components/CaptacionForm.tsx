@@ -21,10 +21,13 @@ import {
   UserCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useEvents } from '../features/events';
+import { useDonations } from '../features/donations';
+import { useMypes } from '../features/mypes';
 
 interface CaptacionFormProps {
-  events: SocialEvent[];
-  onRegisterDonation: (
+  events?: SocialEvent[];
+  onRegisterDonation?: (
     eventId: string,
     mypeName: string,
     category: string,
@@ -42,20 +45,30 @@ interface CaptacionFormProps {
       receiptFileName?: string;
     }
   ) => void;
-  activeEventId: string | null;
+  activeEventId?: string | null;
   mypes?: MypeProfile[];
   selectedMypeToDonate?: MypeProfile | null;
   onClearSelectedMype?: () => void;
 }
 
 export const CaptacionForm: React.FC<CaptacionFormProps> = ({ 
-  events, 
-  onRegisterDonation,
-  activeEventId,
-  mypes,
-  selectedMypeToDonate,
-  onClearSelectedMype
+  events: propEvents, 
+  onRegisterDonation: propOnRegisterDonation,
+  activeEventId: propActiveEventId,
+  mypes: propMypes,
+  selectedMypeToDonate: propSelectedMypeToDonate,
+  onClearSelectedMype: propOnClearSelectedMype
 }) => {
+  const { events: hookEvents } = useEvents();
+  const { addDonation: hookRegisterDonation } = useDonations();
+  const { mypes: hookMypes, selectedMypeToDonate: hookSelected, clearSelectedMype: hookClearSelected } = useMypes();
+
+  const events = propEvents || hookEvents;
+  const onRegisterDonation = propOnRegisterDonation || hookRegisterDonation;
+  const activeEventId = propActiveEventId !== undefined ? propActiveEventId : (hookEvents[0]?.id || null);
+  const mypes = propMypes || hookMypes;
+  const selectedMypeToDonate = propSelectedMypeToDonate !== undefined ? propSelectedMypeToDonate : hookSelected;
+  const onClearSelectedMype = propOnClearSelectedMype || hookClearSelected;
   // 1. STATE - Donor Data (MYPE)
   const [mypeName, setMypeName] = useState('');
   const [ruc, setRuc] = useState('');

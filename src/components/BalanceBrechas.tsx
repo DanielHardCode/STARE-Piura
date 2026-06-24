@@ -19,28 +19,41 @@ import {
   Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useEvents } from '../features/events';
+import { useFinance } from '../features/finance';
 
 interface BalanceBrechasProps {
-  events: SocialEvent[];
-  balances: FundBalances;
-  onDirectBuyItem: (
+  events?: SocialEvent[];
+  balances?: FundBalances;
+  onDirectBuyItem?: (
     eventId: string, 
     itemId: string, 
     qtyToBuy: number, 
     cost: number, 
     itemName: string
   ) => void;
-  selectedEventId: string | null;
-  onSelectEvent: (id: string) => void;
+  selectedEventId?: string | null;
+  onSelectEvent?: (id: string) => void;
 }
 
 export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
-  events,
-  balances,
-  onDirectBuyItem,
-  selectedEventId,
-  onSelectEvent
+  events: propEvents,
+  balances: propBalances,
+  onDirectBuyItem: propOnDirectBuyItem,
+  selectedEventId: propSelectedEventId,
+  onSelectEvent: propOnSelectEvent
 }) => {
+  const { events: hookEvents, selectedEventId: hookSelectedId, setSelectedEventId: hookSelectEvent, directBuyItem: hookDirectBuy } = useEvents();
+  const { balances: hookBalances } = useFinance();
+
+  const events = propEvents || hookEvents;
+  const balances = propBalances || hookBalances;
+  const selectedEventId = propSelectedEventId !== undefined ? propSelectedEventId : hookSelectedId;
+  const onSelectEvent = propOnSelectEvent || hookSelectEvent;
+
+  const onDirectBuyItem = propOnDirectBuyItem || (async (eventId, itemId, qtyToBuy) => {
+    await hookDirectBuy(eventId, itemId, qtyToBuy);
+  });
   // If no selectedEventId or it is 'stock_general', let's default to the first event
   const initialEventId = selectedEventId && selectedEventId !== 'stock_general' 
     ? selectedEventId 

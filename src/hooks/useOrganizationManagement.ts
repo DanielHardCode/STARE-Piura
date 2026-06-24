@@ -1,95 +1,134 @@
-import { useState, useEffect } from 'react';
-import { Organization, SocialEvent, PriorityLevel, InterventionType, EventStatus } from '../types/organization';
+import { useEffect } from 'react';
+import { useOrganizationStore, useEventStore } from '@/stores';
+import type { Organization as LocalOrg, SocialEvent as LocalEvent, EventStatus as LocalStatus } from '../types/organization';
+import type { PiuraDistrict } from '@/types/index';
 
 export const useOrganizationManagement = () => {
-  const [organizations, setOrganizations] = useState<Organization[]>(() => {
-    const saved = localStorage.getItem('stare_org_management_orgs');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'org-1',
-        nombre: 'Comedor Popular Oasis de Amor - Catacaos',
-        direccion: 'Calle San Francisco Mz C Lote 12 - Bajo Piura',
-        sector_demografico: 'Comedor Popular / Madres de Familia',
-        deficiencias_infraestructura: ['Sin Agua Potable', 'Sin Techo Sombreador (Altas Temperaturas PIURA)', 'Sin almacén refrigerado'],
-        nivel_prioridad: 'alta' as const,
-        distrito: 'Catacaos'
-      },
-      {
-        id: 'org-2',
-        nombre: 'I.E. Inicial N° 402 Caserío Carrizalillo',
-        direccion: 'Kilómetro 45 Carretera Tambogrande',
-        sector_demografico: 'Infancia Rural de Extrema Pobreza',
-        deficiencias_infraestructura: ['Aulas de caña/madera', 'Sin conexión de red de agua', 'Riesgo de inundación Pluvial'],
-        nivel_prioridad: 'alta' as const,
-        distrito: 'Tambogrande'
-      },
-      {
-        id: 'org-3',
-        nombre: 'Vaso de Leche Capilla de la Virgen - Castilla',
-        direccion: 'Asentamiento Humano El Indio Sector B',
-        sector_demografico: 'Madres Lactantes y Niñez Temprana',
-        deficiencias_infraestructura: ['Utensilios oxidados', 'Falta tanque elevado de agua'],
-        nivel_prioridad: 'media' as const,
-        distrito: 'Castilla'
-      }
-    ];
-  });
+  const {
+    organizations: storeOrgs,
+    fetchOrganizations,
+    addOrganization: storeAddOrg,
+    deleteOrganization: storeDeleteOrg,
+  } = useOrganizationStore();
 
-  const [orgEvents, setOrgEvents] = useState<SocialEvent[]>(() => {
-    const saved = localStorage.getItem('stare_org_management_events');
-    return saved ? JSON.parse(saved) : [
-      {
-        id: 'ev-org-1',
-        organization_id: 'org-1',
-        fecha_programada: '2026-07-05',
-        tipo_intervencion: 'infraestructura' as const,
-        estado: 'pendiente' as const,
-        voluntarios_requeridos: 8
-      },
-      {
-        id: 'ev-org-2',
-        organization_id: 'org-2',
-        fecha_programada: '2026-07-12',
-        tipo_intervencion: 'educativa' as const,
-        estado: 'pendiente' as const,
-        voluntarios_requeridos: 5
-      }
-    ];
-  });
+  const {
+    events: storeEvents,
+    fetchEvents,
+    addEvent: storeAddEvent,
+    updateEvent: storeUpdateEvent,
+  } = useEventStore();
 
+  // Cargar datos en el montaje para que el almacén esté al día
   useEffect(() => {
-    localStorage.setItem('stare_org_management_orgs', JSON.stringify(organizations));
-  }, [organizations]);
+    fetchOrganizations();
+    fetchEvents();
+  }, [fetchOrganizations, fetchEvents]);
 
-  useEffect(() => {
-    localStorage.setItem('stare_org_management_events', JSON.stringify(orgEvents));
-  }, [orgEvents]);
+  // 1. Mapear de base de datos a formato de componente antiguo (Adapter Pattern)
+  const organizations: LocalOrg[] = storeOrgs.map((org) => ({
+    id: org.id,
+    nombre: org.nombre,
+    direccion: org.direccion,
+    sector_demografico: org.tipo === 'comedor'
+      ? 'Comedor Popular'
+      : org.tipo === 'asilo'
+      ? 'Hogar del Adulto Mayor'
+      : org.tipo === 'vaso_de_leche'
+      ? 'Vaso de Leche'
+      : 'Organización Beneficiaria',
+    deficiencias_infraestructura: org.necesidades,
+    nivel_prioridad: org.necesidades.length >= 4 ? 'alta' : 'media',
+    distrito: org.distrito,
+  }));
 
-  const addOrganization = (org: Omit<Organization, 'id'>) => {
-    const newOrg: Organization = {
+  const orgEvents: LocalEvent[] = storeEvents
+    .filter((e) => e.organization_id)
+    .map((e) => ({
+      id: e.id,
+      organization_id: e.organization_id!,
+      fecha_programada: e.start_time.split('T')[0],
+      tipo_intervencion: e.title.toLowerCase().includes('infraestructura')
+        ? 'infraestructura'
+        : e.title.toLowerCase().includes('educación')
+        ? 'educativa'
+        : 'acompañamiento',
+      estado: e.status === 'realizada'
+        ? 'completado'
+        : e.status === 'en_curso'
+        ? 'en curso'
+        : 'pendiente',
+      voluntarios_requeridos: 5, // fallback representativo
+    }));
+
+  // 2. Acciones mutadoras con actualización optimista (síncronas para el UI, asíncronas para el backend)
+  const addOrganization = (org: Omit<LocalOrg, 'id'>): LocalOrg => {
+    const generatedId = `org-${Date.now()}`;
+    const localNewOrg: LocalOrg = {
       ...org,
-      id: `org-${Date.now()}`
+      id: generatedId,
     };
-    setOrganizations(prev => [newOrg, ...prev]);
-    return newOrg;
+
+    const tipo = org.sector_demografico.toLowerCase().includes('comedor')
+      ? 'comedor'
+      : org.sector_demografico.toLowerCase().includes('asilo')
+      ? 'asilo'
+      : org.sector_demografico.toLowerCase().includes('vaso')
+      ? 'vaso_de_leche'
+      : 'otro';
+
+    // Despachar llamada asíncrona al store
+    storeAddOrg({
+      nombre: org.nombre,
+      tipo: tipo as any,
+      direccion: org.direccion,
+      distrito: org.distrito as PiuraDistrict,
+      encargado: 'Encargado Principal',
+      beneficiarios_estimados: 60,
+      necesidades: org.deficiencias_infraestructura,
+    }).catch(console.error);
+
+    return localNewOrg;
   };
 
-  const addSocialEvent = (event: Omit<SocialEvent, 'id'>) => {
-    const newEvent: SocialEvent = {
+  const addSocialEvent = (event: Omit<LocalEvent, 'id'>): LocalEvent => {
+    const generatedId = `ev-${Date.now()}`;
+    const localNewEvent: LocalEvent = {
       ...event,
-      id: `ev-${Date.now()}`
+      id: generatedId,
     };
-    setOrgEvents(prev => [...prev, newEvent]);
-    return newEvent;
+
+    const org = storeOrgs.find((o) => o.id === event.organization_id);
+    const distrito = org ? org.distrito : 'Piura Centro';
+
+    // Despachar llamada asíncrona al store
+    storeAddEvent({
+      organization_id: event.organization_id,
+      organization_nombre: org?.nombre || 'Organización',
+      title: `Intervención de ${event.tipo_intervencion}`,
+      description: `Jornada planificada para apoyar a la organización.`,
+      distrito: distrito as PiuraDistrict,
+      target_audience: org?.tipo || 'Población general',
+      start_time: `${event.fecha_programada}T09:00:00`,
+      end_time: `${event.fecha_programada}T17:00:00`,
+    }).catch(console.error);
+
+    return localNewEvent;
   };
 
-  const updateEventStatus = (eventId: string, status: EventStatus) => {
-    setOrgEvents(prev => prev.map(ev => ev.id === eventId ? { ...ev, estado: status } : ev));
+  const updateEventStatus = (eventId: string, status: LocalStatus): void => {
+    const mappedStatus = status === 'completado'
+      ? 'realizada'
+      : status === 'en curso'
+      ? 'en_curso'
+      : 'programada';
+
+    storeUpdateEvent(eventId, {
+      status: mappedStatus as any,
+    }).catch(console.error);
   };
 
-  const deleteOrganization = (orgId: string) => {
-    setOrganizations(prev => prev.filter(org => org.id !== orgId));
-    setOrgEvents(prev => prev.filter(ev => ev.organization_id !== orgId));
+  const deleteOrganization = (orgId: string): void => {
+    storeDeleteOrg(orgId).catch(console.error);
   };
 
   return {
@@ -98,6 +137,6 @@ export const useOrganizationManagement = () => {
     addOrganization,
     addSocialEvent,
     updateEventStatus,
-    deleteOrganization
+    deleteOrganization,
   };
 };

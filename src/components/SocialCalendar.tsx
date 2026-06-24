@@ -15,19 +15,27 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { useEvents } from '../features/events';
+
 interface SocialCalendarProps {
-  events: SocialEvent[];
-  selectedEventId: string | null;
-  onSelectEvent: (eventId: string) => void;
-  onAddEvent: (newEvent: SocialEvent) => void;
+  events?: SocialEvent[];
+  selectedEventId?: string | null;
+  onSelectEvent?: (eventId: string) => void;
+  onAddEvent?: (newEvent: SocialEvent) => void;
 }
 
 export const SocialCalendar: React.FC<SocialCalendarProps> = ({
-  events,
-  selectedEventId,
-  onSelectEvent,
-  onAddEvent,
+  events: propEvents,
+  selectedEventId: propSelectedEventId,
+  onSelectEvent: propOnSelectEvent,
+  onAddEvent: propOnAddEvent,
 }) => {
+  const { events: hookEvents, selectedEventId: hookSelectedId, setSelectedEventId: hookSelectEvent, addEvent: hookAddEvent } = useEvents();
+
+  const events = propEvents || hookEvents;
+  const selectedEventId = propSelectedEventId !== undefined ? propSelectedEventId : hookSelectedId;
+  const onSelectEvent = propOnSelectEvent || hookSelectEvent;
+  const onAddEvent = propOnAddEvent || hookAddEvent;
   // District filter
   const [districtFilter, setDistrictFilter] = useState<PiuraDistrict | 'Todos'>('Todos');
   

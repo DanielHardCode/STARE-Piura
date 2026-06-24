@@ -13,14 +13,24 @@ import {
   X 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useFinance } from '../features/finance';
 
 interface KPICardsProps {
-  balances: FundBalances;
-  movements: BalanceMovement[];
-  onAddTransaction: (fund: FundSourceType, type: 'ingreso' | 'egreso', amount: number, description: string, method: string) => void;
+  balances?: FundBalances;
+  movements?: BalanceMovement[];
+  onAddTransaction?: (fund: FundSourceType, type: 'ingreso' | 'egreso', amount: number, description: string, method: string) => void;
 }
 
-export const KPICards: React.FC<KPICardsProps> = ({ balances, movements, onAddTransaction }) => {
+export const KPICards: React.FC<KPICardsProps> = ({ 
+  balances: propBalances, 
+  movements: propMovements, 
+  onAddTransaction: propOnAddTransaction 
+}) => {
+  const { balances: hookBalances, movements: hookMovements, addTransaction: hookAddTransaction } = useFinance();
+
+  const balances = propBalances || hookBalances;
+  const movements = propMovements || hookMovements;
+  const onAddTransaction = propOnAddTransaction || hookAddTransaction;
   const [showLogisticsModal, setShowLogisticsModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   

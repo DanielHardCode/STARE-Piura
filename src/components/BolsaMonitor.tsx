@@ -21,11 +21,15 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { useEvents } from '../features/events';
+import { useDonations } from '../features/donations';
+import { useFinance } from '../features/finance';
+
 interface BolsaMonitorProps {
-  events: SocialEvent[];
-  selectedEventId: string | null;
-  onSelectEvent: (eventId: string) => void;
-  onRegisterDonation: (
+  events?: SocialEvent[];
+  selectedEventId?: string | null;
+  onSelectEvent?: (eventId: string) => void;
+  onRegisterDonation?: (
     eventId: string,
     mypeName: string,
     category: string,
@@ -34,18 +38,30 @@ interface BolsaMonitorProps {
     amount?: number,
     itemsDonated?: { itemName: string; qty: number }[]
   ) => void;
-  onBalanceInventory: (eventId: string, maxBudgetAllocated: number) => Promise<{ success: boolean; spent: number; msg: string }> | { success: boolean; spent: number; msg: string };
-  availableAcquisitionFund: number;
+  onBalanceInventory?: (eventId: string, maxBudgetAllocated: number) => Promise<{ success: boolean; spent: number; msg: string }> | { success: boolean; spent: number; msg: string };
+  availableAcquisitionFund?: number;
 }
 
 export const BolsaMonitor: React.FC<BolsaMonitorProps> = ({
-  events,
-  selectedEventId,
-  onSelectEvent,
-  onRegisterDonation,
-  onBalanceInventory,
-  availableAcquisitionFund,
+  events: propEvents,
+  selectedEventId: propSelectedEventId,
+  onSelectEvent: propOnSelectEvent,
+  onRegisterDonation: propOnRegisterDonation,
+  onBalanceInventory: propOnBalanceInventory,
+  availableAcquisitionFund: propAvailableFund,
 }) => {
+  const { events: hookEvents, selectedEventId: hookSelectedId, setSelectedEventId: hookSelectEvent, balanceInventory: hookBalanceInventory } = useEvents();
+  const { addDonation: hookRegisterDonation } = useDonations();
+  const { balances: hookBalances } = useFinance();
+
+  const events = propEvents || hookEvents;
+  const selectedEventId = propSelectedEventId !== undefined ? propSelectedEventId : hookSelectedId;
+  const onSelectEvent = propOnSelectEvent || hookSelectEvent;
+  const onRegisterDonation = propOnRegisterDonation || hookRegisterDonation;
+  const availableAcquisitionFund = propAvailableFund !== undefined ? propAvailableFund : hookBalances.fondoAdquisicion;
+  const onBalanceInventory = propOnBalanceInventory || (async (eventId, maxBudget) => {
+    return await hookBalanceInventory(eventId, maxBudget, availableAcquisitionFund);
+  });
   const [showDonationModal, setShowDonationModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
 
