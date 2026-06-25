@@ -16,7 +16,7 @@ RUN docker-php-ext-install pdo pdo_pgsql pdo_mysql mbstring exif pcntl bcmath gd
 
 RUN a2enmod rewrite
 
-COPY apache.conf /etc/apache2/sites-available/000-default.conf
+COPY docker-laravel/apache.conf /etc/apache2/sites-available/000-default.conf
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -39,7 +39,7 @@ RUN { \
     echo 'opcache.enable_cli=1'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker-laravel/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 80
