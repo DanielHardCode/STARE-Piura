@@ -1,0 +1,10 @@
+docker-laravel/
+vendor/
+node_modules/
+.git/
+.env
+storage/framework/cache/data/
+storage/logs/
+.phpunit.result.cache
+.DS_Store
+Thumbs.db
