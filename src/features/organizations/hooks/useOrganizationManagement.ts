@@ -80,6 +80,12 @@ export const useOrganizationManagement = () => {
     );
   };
 
+  const updateOrganization = (orgId: string, updatedOrg: Partial<Omit<Organization, 'id'>>) => {
+    setOrganizations(prev =>
+      prev.map(org => (org.id === orgId ? { ...org, ...updatedOrg } : org))
+    );
+  };
+
   const deleteOrganization = (orgId: string) => {
     setOrganizations(prev => prev.filter(org => org.id !== orgId));
     setOrgEvents(prev => prev.filter(ev => ev.organization_id !== orgId));
@@ -89,6 +95,7 @@ export const useOrganizationManagement = () => {
     organizations,
     orgEvents,
     addOrganization,
+    updateOrganization,
     addSocialEvent,
     updateEventStatus,
     deleteOrganization,

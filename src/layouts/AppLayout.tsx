@@ -82,6 +82,7 @@ export function AppLayout({
 }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const { user, logout } = useAuthStore();
   const isVoluntario = user?.role === 'voluntario';
@@ -267,21 +268,61 @@ export function AppLayout({
           {/* Right actions */}
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <button
-              className={cn(
-                'relative p-2 rounded-[var(--radius-lg)]',
-                'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-                'transition-colors duration-150'
-              )}
-              aria-label={`Notificaciones: ${notificationCount}`}
-            >
-              <Bell className="w-5 h-5" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5">
-                  <CountBadge count={notificationCount} />
-                </span>
-              )}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications((prev) => !prev)}
+                className={cn(
+                  'relative p-2 rounded-[var(--radius-lg)]',
+                  'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+                  'transition-colors duration-150'
+                )}
+                aria-label={`Notificaciones: ${notificationCount}`}
+              >
+                <Bell className="w-5 h-5" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5">
+                    <CountBadge count={notificationCount} />
+                  </span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-72 bg-[var(--color-bg-primary)] border border-[var(--color-border)] shadow-xl rounded-2xl overflow-hidden z-[100]"
+                  >
+                    <div className="p-3 border-b border-[var(--color-border)] font-bold text-sm text-[var(--color-text-primary)] flex justify-between items-center">
+                      Notificaciones
+                      <span className="text-[10px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-full">{notificationCount > 0 ? `${notificationCount} nuevas` : 'Al día'}</span>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      <div className="p-3 border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] cursor-pointer transition-colors relative">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-teal-500"></div>
+                        <p className="text-xs font-semibold text-[var(--color-text-primary)] pl-1">Nueva Mype Aliada</p>
+                        <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5 pl-1">Panadería San José (Catacaos) se unió a la red de donantes.</p>
+                        <p className="text-[9px] text-[var(--color-text-tertiary)] mt-1 pl-1 font-mono">Hace 2 horas</p>
+                      </div>
+                      <div className="p-3 border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] cursor-pointer transition-colors">
+                        <p className="text-xs font-semibold text-[var(--color-text-primary)]">Jornada Confirmada</p>
+                        <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">El evento en el Comedor Las Mercedes está listo para mañana.</p>
+                        <p className="text-[9px] text-[var(--color-text-tertiary)] mt-1 font-mono">Hace 5 horas</p>
+                      </div>
+                      <div className="p-3 border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] cursor-pointer transition-colors">
+                        <p className="text-xs font-semibold text-[var(--color-text-primary)]">Alerta de Insumos</p>
+                        <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">La meta de donación para Sullana se completó al 100%.</p>
+                        <p className="text-[9px] text-[var(--color-text-tertiary)] mt-1 font-mono">Ayer</p>
+                      </div>
+                    </div>
+                    <div className="p-2 text-center border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+                      <button className="text-[11px] font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]">Marcar todas como leídas</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Avatar (desktop only) */}
             <div className="hidden sm:block">

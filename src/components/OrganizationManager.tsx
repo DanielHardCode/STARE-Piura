@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Filter,
   Trash2,
+  Edit2,
   ListPlus,
   HelpCircle,
   Search
@@ -30,6 +31,7 @@ export const OrganizationManager: React.FC<OrganizationManagerProps> = ({ onSync
     organizations,
     orgEvents,
     addOrganization,
+    updateOrganization,
     addSocialEvent,
     updateEventStatus,
     deleteOrganization
@@ -37,6 +39,7 @@ export const OrganizationManager: React.FC<OrganizationManagerProps> = ({ onSync
 
   // Modals Toggles
   const [showOrgForm, setShowOrgForm] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
@@ -241,6 +244,17 @@ export const OrganizationManager: React.FC<OrganizationManagerProps> = ({ onSync
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setEditingOrg(org);
+                          }}
+                          className="p-1 px-1.5 text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg hover:border-indigo-300 transition-all cursor-pointer"
+                          title="Editar organización"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             deleteOrganization(org.id);
                             if (selectedOrgId === org.id) setSelectedOrgId(null);
                           }}
@@ -261,14 +275,24 @@ export const OrganizationManager: React.FC<OrganizationManagerProps> = ({ onSync
       </div>
 
       {/* MODAL LIGHT OVERLAY FOR WIZARD FORM: ORGANIZATION */}
-      {showOrgForm && (
-        <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
+      {(showOrgForm || editingOrg) && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
           <div className="py-8 max-w-2xl w-full">
             <OrganizationForm 
+              initialData={editingOrg || undefined}
               onRegister={(org) => {
-                addOrganization(org);
+                if (editingOrg) {
+                  updateOrganization(editingOrg.id, org);
+                  setEditingOrg(null);
+                } else {
+                  addOrganization(org);
+                  setShowOrgForm(false);
+                }
               }}
-              onClose={() => setShowOrgForm(false)}
+              onClose={() => {
+                setShowOrgForm(false);
+                setEditingOrg(null);
+              }}
             />
           </div>
         </div>
@@ -276,7 +300,7 @@ export const OrganizationManager: React.FC<OrganizationManagerProps> = ({ onSync
 
       {/* MODAL LIGHT OVERLAY FOR WIZARD FORM: SOCIAL EVENT */}
       {showEventForm && (
-        <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
           <div className="py-8 max-w-2xl w-full">
             <EventPlanner 
               organizations={organizations}
