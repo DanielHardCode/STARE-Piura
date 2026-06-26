@@ -186,9 +186,10 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
       </div>
 
       {/* CALENDAR GRID (JUNE 2026 - Starts on Monday, 30 Days) */}
-      <div className="border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-3xs">
+      <div className="border border-slate-100 rounded-2xl overflow-x-auto bg-white shadow-sm">
+        <div className="min-w-[700px]">
         {/* Week headers */}
-        <div className="grid grid-cols-7 bg-slate-50/80 border-b border-slate-100 py-2.5 text-center text-2xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+        <div className="grid grid-cols-7 bg-slate-50/80 border-b border-slate-100 py-2.5 text-center text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">
           <div>Lun</div>
           <div>Mar</div>
           <div>Mié <span className="text-[9px] text-amber-600 font-extrabold bg-amber-100/60 px-1.5 py-0.5 rounded-md ml-0.5">(Hoy)</span></div>
@@ -262,6 +263,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
               </div>
             );
           })}
+        </div>
         </div>
       </div>
 

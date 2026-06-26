@@ -9,12 +9,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Menu, X, LogOut, MapPin, Wifi, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { pageVariants, springs } from '@/animations/variants';
 import { Avatar, CountBadge } from '@/components/ui';
 import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
+import { useAuthStore } from '@/stores/auth';
 import type { ActiveScreen } from '@/app/config/app.config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ const screenTitles: Record<ActiveScreen, string> = {
   voluntario:     'Cronograma de Visitas',
   organizaciones: 'Organizaciones Beneficiarias',
   eventos:        'Eventos y Jornadas de Ayuda',
+  usuarios:       'Gestión de Usuarios',
 };
 
 const screenSubtitles: Record<ActiveScreen, string> = {
@@ -44,6 +46,7 @@ const screenSubtitles: Record<ActiveScreen, string> = {
   voluntario:     'Visitas de asistencia social programadas',
   organizaciones: 'Comedores, asilos, vasos de leche y albergues',
   eventos:        'Planificación de jornadas de apoyo social en Piura',
+  usuarios:       'Administración de accesos y roles (RBAC)',
 };
 
 // ─── Hook: Dark Mode ──────────────────────────────────────────────────────────
@@ -80,14 +83,17 @@ export function AppLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
+  const { user, logout } = useAuthStore();
+  const isVoluntario = user?.role === 'voluntario';
 
   // Sidebar width offset for main content
-  const sidebarWidth = sidebarCollapsed ? 68 : 256;
+  const sidebarWidth = isVoluntario ? 0 : (sidebarCollapsed ? 68 : 256);
 
   return (
     <div className="min-h-dvh bg-[var(--color-bg-base)]">
       {/* ── Desktop Sidebar ── */}
-      <Sidebar
+      {!isVoluntario && (
+        <Sidebar
         activeScreen={activeScreen}
         onNavigate={onNavigate}
         collapsed={sidebarCollapsed}
@@ -96,10 +102,11 @@ export function AppLayout({
         isDarkMode={isDark}
         onToggleDarkMode={toggleDarkMode}
       />
+      )}
 
       {/* ── Mobile Overlay Menu ── */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {mobileMenuOpen && !isVoluntario && (
           <>
             <motion.div
               key="mobile-overlay"
@@ -128,11 +135,11 @@ export function AppLayout({
               <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 bg-teal-600 rounded-[var(--radius-md)] flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">SP</span>
+                    <Target className="w-4 h-4 text-white" aria-hidden />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-[var(--color-text-primary)]">STARE Piura</p>
-                    <p className="text-[10px] text-[var(--color-text-tertiary)]">Prefectura Zonal</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[var(--color-text-primary)] leading-none">STARE Piura</p>
+                    <p className="text-[9px] text-[var(--color-text-tertiary)] mt-0.5 leading-tight pr-2">Sistema de Trazabilidad y Asignación de Recursos</p>
                   </div>
                 </div>
                 <button
@@ -186,11 +193,44 @@ export function AppLayout({
 
       {/* ── Main Content Area ── */}
       <div
-        className="transition-[padding-left] duration-300 ease-[0.32,0.72,0,1] lg:pb-0 pb-20"
-        style={{ paddingLeft: `${sidebarWidth}px` }}
+        className={cn(
+          "transition-[padding-left] duration-300 ease-[0.32,0.72,0,1] lg:pb-0 pb-20",
+          !isVoluntario && sidebarCollapsed ? "lg:pl-[68px]" : "",
+          !isVoluntario && !sidebarCollapsed ? "lg:pl-[256px]" : ""
+        )}
       >
         {/* ── Top Header ── */}
-        <header
+        {isVoluntario ? (
+          <header className={cn('sticky top-0 z-[var(--z-header)]', 'glass border-b border-[var(--color-border)]', 'px-4 sm:px-6 py-4', 'flex items-center justify-between gap-4')}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-teal-600 rounded-[var(--radius-md)] flex items-center justify-center shrink-0">
+                <Target className="w-4 h-4 text-white" aria-hidden />
+              </div>
+              <div className="min-w-0 hidden sm:block">
+                <p className="text-sm font-bold text-[var(--color-text-primary)] leading-none">STARE Piura</p>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] mt-0.5 leading-none">Voluntariado</p>
+              </div>
+            </div>
+            
+            <div className="flex-1 flex justify-center">
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 rounded-full text-xs font-medium border border-emerald-200 dark:border-emerald-500/20">
+                <Wifi className="w-3.5 h-3.5" />
+                Online
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-bold text-[var(--color-text-primary)]">{user?.nombre || 'Voluntario'}</p>
+              </div>
+              <button onClick={logout} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2">
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-bold hidden sm:block">Salir</span>
+              </button>
+            </div>
+          </header>
+        ) : (
+          <header
           className={cn(
             'sticky top-0 z-[var(--z-header)]',
             'glass border-b border-[var(--color-border)]',
@@ -249,6 +289,7 @@ export function AppLayout({
             </div>
           </div>
         </header>
+        )}
 
         {/* ── Page Content ── */}
         <main className="px-4 sm:px-6 py-6 max-w-7xl mx-auto">
@@ -267,7 +308,7 @@ export function AppLayout({
       </div>
 
       {/* ── Mobile Bottom Nav ── */}
-      <BottomNav activeScreen={activeScreen} onNavigate={onNavigate} />
+      {!isVoluntario && <BottomNav activeScreen={activeScreen} onNavigate={onNavigate} />}
     </div>
   );
 }

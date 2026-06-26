@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Organization, PriorityLevel } from '../types/organization';
+import { Organization } from '../types/organization';
 import { 
   Building2, 
   MapPin, 
@@ -38,7 +38,6 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
   const [tipoOrg, setTipoOrg] = useState('Comedor popular');
   const [customTipoOrg, setCustomTipoOrg] = useState('');
   const [estado, setEstado] = useState('Activo');
-  const [nivelPrioridad, setNivelPrioridad] = useState<PriorityLevel>('alta');
 
   // STEP 2: Ubicación
   const [pais, setPais] = useState('Perú');
@@ -135,7 +134,6 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
     setTipoOrg('Comedor popular');
     setCustomTipoOrg('');
     setEstado('Activo');
-    setNivelPrioridad('alta');
     setPais('Perú');
     setRegion('Piura');
     setProvincia('Piura');
@@ -196,7 +194,6 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
       direccion: direccion.trim(),
       sector_demografico: poblacionAtiende.trim() || tipoPoblacion,
       deficiencias_infraestructura: defs,
-      nivel_prioridad: nivelPrioridad,
       distrito: distrito.trim()
     });
 
@@ -344,27 +341,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
               </div>
             )}
 
-            <div>
-              <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
-                Prioridad de Atención *
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['alta', 'media', 'baja'] as PriorityLevel[]).map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setNivelPrioridad(level)}
-                    className={`py-2 px-3 border-2 rounded-xl text-xs font-bold uppercase transition-all tracking-wider ${
-                      nivelPrioridad === level
-                        ? 'bg-rose-100 border-rose-600 text-rose-950 font-black'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
+
           </div>
         )}
 

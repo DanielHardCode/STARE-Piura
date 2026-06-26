@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (isMockMode) {
         await new Promise((resolve) => setTimeout(resolve, 800));
         // Permitimos login en modo mock de acuerdo al correo
-        const role: UserRole = email.includes('admin') ? 'admin' : 'coordinador';
+        const role: UserRole = email.includes('admin') ? 'admin' : email.includes('voluntario') ? 'voluntario' : 'coordinador';
         set({
           user: {
             id: 'mock-user-id',

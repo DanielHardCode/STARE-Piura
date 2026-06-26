@@ -37,7 +37,6 @@ export const useOrganizationManagement = () => {
       ? 'Vaso de Leche'
       : 'Organización Beneficiaria',
     deficiencias_infraestructura: org.necesidades,
-    nivel_prioridad: org.necesidades.length >= 4 ? 'alta' : 'media',
     distrito: org.distrito,
   }));
 

@@ -21,6 +21,8 @@ import {
   Sun,
   Moon,
   MapPin,
+  Users,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { springs, sidebarVariants, sidebarLabelVariants } from '@/animations/variants';
@@ -53,6 +55,7 @@ const navItems: Array<{
   { id: 'balance',        label: 'Balance y Brechas',     icon: BarChart3 },
   { id: 'organizaciones', label: 'Organizaciones',        icon: Building2 },
   { id: 'eventos',        label: 'Eventos de Ayuda',      icon: CalendarDays },
+  { id: 'voluntario',     label: 'Visitas de Campo',      icon: MapPin },
 ];
 
 const secondaryItems: Array<{
@@ -60,7 +63,7 @@ const secondaryItems: Array<{
   label: string;
   icon: React.ElementType;
 }> = [
-  // En fases futuras se agregarán más aquí
+  { id: 'usuarios', label: 'Usuarios y Roles', icon: Users },
 ];
 
 // ─── Nav Item Component ───────────────────────────────────────────────────────
@@ -143,6 +146,13 @@ export function Sidebar({
     return true;
   });
 
+  const filteredSecondaryItems = secondaryItems.filter((item) => {
+    if (item.id === 'usuarios') {
+      return user?.role === 'admin';
+    }
+    return true;
+  });
+
   return (
     <motion.aside
       variants={sidebarVariants}
@@ -173,14 +183,14 @@ export function Sidebar({
             className="flex items-center gap-2.5 min-w-0"
           >
             <div className="w-8 h-8 bg-teal-600 rounded-[var(--radius-md)] flex items-center justify-center shrink-0">
-              <MapPin className="w-4 h-4 text-white" aria-hidden />
+              <Target className="w-4 h-4 text-white" aria-hidden />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-bold text-[var(--color-text-primary)] leading-none">
                 STARE Piura
               </p>
-              <p className="text-[10px] text-[var(--color-text-tertiary)] mt-0.5 leading-none">
-                Prefectura Zonal
+              <p className="text-[9px] text-[var(--color-text-tertiary)] mt-0.5 leading-tight pr-1">
+                Sistema de Trazabilidad y Asignación de Recursos
               </p>
             </div>
           </motion.div>
@@ -188,7 +198,7 @@ export function Sidebar({
 
         {collapsed && (
           <div className="w-8 h-8 bg-teal-600 rounded-[var(--radius-md)] flex items-center justify-center">
-            <MapPin className="w-4 h-4 text-white" aria-hidden />
+            <Target className="w-4 h-4 text-white" aria-hidden />
           </div>
         )}
       </div>
@@ -205,10 +215,10 @@ export function Sidebar({
           />
         ))}
 
-        {secondaryItems.length > 0 && (
+        {filteredSecondaryItems.length > 0 && (
           <>
             <div className="my-3 border-t border-[var(--color-border)]" />
-            {secondaryItems.map((item) => (
+            {filteredSecondaryItems.map((item) => (
               <NavItem
                 key={item.id}
                 item={item}

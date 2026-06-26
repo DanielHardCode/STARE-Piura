@@ -205,7 +205,7 @@ export const EventManager: React.FC = () => {
           onClick={() => setShowEventForm(true)}
           className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-sans font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer shadow-sm transition-all"
         >
-          <PlusCircle className="w-4 h-4 shrink-0" /> Planificar Jornada
+          <PlusCircle className="w-4 h-4 shrink-0" /> Registrar nuevo evento
         </button>
       </div>
 

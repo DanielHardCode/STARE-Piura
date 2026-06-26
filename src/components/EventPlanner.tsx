@@ -345,7 +345,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   <option value="" disabled>-- Selecciona una institución registrada --</option>
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
-                      {org.nombre} ({org.distrito}) - Prioridad {org.nivel_prioridad.toUpperCase()}
+                      {org.nombre} ({org.distrito})
                     </option>
                   ))}
                 </select>
