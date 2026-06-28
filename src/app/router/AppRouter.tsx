@@ -20,6 +20,7 @@ import { VoluntarioMobil } from '../../components/VoluntarioMobil';
 import { MypeDirectory } from '../../components/MypeDirectory';
 import { OrganizationManager } from '../../components/OrganizationManager';
 import { EventManager } from '../../components/EventManager';
+import { UserManager } from '../../components/UserManager';
 
 // New Zustand Stores
 import {
@@ -46,9 +47,13 @@ export function AppRouter() {
 
   const { user } = useAuthStore();
 
-  // Route guard: Redirigir a 'dashboard' si un no-admin intenta entrar a la pantalla de Balance
+  // Route guard: Redirigir según el rol
   useEffect(() => {
-    if (activeScreen === 'balance' && user?.role !== 'admin') {
+    if (user?.role === 'voluntario') {
+      if (activeScreen !== 'voluntario') {
+        setActiveScreen('voluntario');
+      }
+    } else if ((activeScreen === 'balance' || activeScreen === 'usuarios') && user?.role !== 'admin') {
       setActiveScreen('dashboard');
     }
   }, [activeScreen, user]);
@@ -666,7 +671,7 @@ export function AppRouter() {
         {/* VOLUNTARIO (Oculto del Sidebar/BottomNav pero soportado internamente) */}
         {activeScreen === 'voluntario' && (
           <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <VoluntarioMobil events={events} onCompleteEvent={handleCompleteEvent} />
+            <VoluntarioMobil events={events.filter(e => e.status === 'en_progreso')} onCompleteEvent={handleCompleteEvent} />
           </motion.section>
         )}
 
@@ -684,6 +689,12 @@ export function AppRouter() {
           </motion.section>
         )}
 
+        {/* USUARIOS */}
+        {activeScreen === 'usuarios' && (
+          <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-slate-800">
+            <UserManager />
+          </motion.section>
+        )}
       </div>
     </AppLayout>
   );

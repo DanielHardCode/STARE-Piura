@@ -532,7 +532,7 @@ export const CaptacionForm: React.FC<CaptacionFormProps> = ({
 
         {/* SECCIÓN 2: TABS DINÁMICAS (TIPO DE DONACIÓN) */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-150 pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-150 pb-2">
             <div className="flex items-center gap-2 text-indigo-950 font-bold text-xs uppercase tracking-wider">
               <span className="flex items-center justify-center w-5 h-5 bg-indigo-100 text-indigo-700 rounded-full text-[11px]">2</span>
               <span>Modalidad del Aporte Recibido</span>

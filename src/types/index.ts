@@ -51,13 +51,15 @@ export type DonationType = 'monetaria' | 'especie';
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
 
-export type UserRole = 'admin' | 'coordinador';
+export type UserRole = 'admin' | 'coordinador' | 'voluntario';
 
 export interface User {
   id: string;
   email: string;
   nombre: string;
   role: UserRole;
+  telefono?: string;
+  activo: boolean;
   avatar_url?: string;
   created_at: string;
 }

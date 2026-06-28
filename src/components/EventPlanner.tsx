@@ -63,6 +63,10 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
 
   // STEP 2: Logística y Coordinación
   const [responsable, setResponsable] = useState('');
+  const [responsableCelular, setResponsableCelular] = useState('');
+  const [responsableTrazabilidad, setResponsableTrazabilidad] = useState('');
+  const [responsableTrazabilidadCelular, setResponsableTrazabilidadCelular] = useState('');
+  const [voluntariosRequeridos, setVoluntariosRequeridos] = useState<string>('');
   const [equipoApoyo, setEquipoApoyo] = useState('');
   const [aliados, setAliados] = useState('');
 
@@ -135,6 +139,10 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
     setSelectedOrgId('');
     setProblematica('');
     setResponsable('');
+    setResponsableCelular('');
+    setResponsableTrazabilidad('');
+    setResponsableTrazabilidadCelular('');
+    setVoluntariosRequeridos('');
     setEquipoApoyo('');
     setAliados('');
     setInputProducto('');
@@ -211,7 +219,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
       fecha_programada: fechaInicio,
       tipo_intervencion: (tipoEvento.toLowerCase().includes('infraestructura') ? 'infraestructura' : tipoEvento.toLowerCase().includes('educ') ? 'educativa' : 'acompañamiento'),
       estado: 'pendiente',
-      voluntarios_requeridos: Math.max(1, parseInt(equipoApoyo.split(',').length.toString()) || 4)
+      voluntarios_requeridos: voluntariosRequeridos ? parseInt(voluntariosRequeridos) : Math.max(1, parseInt(equipoApoyo.split(',').length.toString()) || 4)
     });
 
     // 2. Synchronize to global calendar of CommandCenterLogistico
@@ -250,7 +258,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
   };
 
   return (
-    <div className="bg-white border-2 border-slate-900 rounded-3xl p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full mx-auto relative">
+    <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-2xl w-full mx-auto relative text-slate-900 dark:text-white">
       
       {/* HEADER */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
@@ -259,10 +267,10 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
             <Calendar className="w-5 h-5" />
           </span>
           <div>
-            <h3 className="text-base font-sans font-black text-slate-800 uppercase tracking-tight">
+            <h3 className="text-base font-sans font-black text-slate-800 dark:text-white uppercase tracking-tight">
               PROGRAMAR NUEVO EVENTO (PIURA)
             </h3>
-            <p className="text-[11px] font-medium text-slate-400">
+            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-400">
               Crea una nueva jornada de apoyo vinculada a una institución piurana
             </p>
           </div>
@@ -345,7 +353,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   <option value="" disabled>-- Selecciona una institución registrada --</option>
                   {organizations.map((org) => (
                     <option key={org.id} value={org.id}>
-                      {org.nombre} ({org.distrito}) - Prioridad {org.nivel_prioridad.toUpperCase()}
+                      {org.nombre} ({org.distrito})
                     </option>
                   ))}
                 </select>
@@ -415,41 +423,104 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
               </p>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
-                Responsable del Evento
-              </label>
-              <input
-                type="text"
-                placeholder="Nombre de la persona que lidera la actividad"
-                value={responsable}
-                onChange={(e) => setResponsable(e.target.value)}
-                className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  Responsable del Evento
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nombre de la persona que lidera la actividad"
+                  value={responsable}
+                  onChange={(e) => setResponsable(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  Celular Responsable Evento
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Ej. 999 888 777"
+                  value={responsableCelular}
+                  onChange={(e) => setResponsableCelular(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  Responsable de Trazabilidad
+                </label>
+                <input
+                  type="text"
+                  placeholder="Voluntario responsable de trazabilidad"
+                  value={responsableTrazabilidad}
+                  onChange={(e) => setResponsableTrazabilidad(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  Celular Responsable Trazabilidad
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Ej. 999 888 777"
+                  value={responsableTrazabilidadCelular}
+                  onChange={(e) => setResponsableTrazabilidadCelular(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  Voluntarios Requeridos (Max 20)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  step="1"
+                  placeholder="Ej. 10"
+                  value={voluntariosRequeridos}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (!val) { setVoluntariosRequeridos(''); return; }
+                    const num = parseInt(val);
+                    if (num <= 20) setVoluntariosRequeridos(num.toString());
+                  }}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  Aliados o Instituciones Participantes
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Municipalidad, Parroquia local"
+                  value={aliados}
+                  onChange={(e) => setAliados(e.target.value)}
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
-                Equipo de Apoyo (Colaboradores / Voluntarios separados por comas)
+                Equipo de Apoyo (Nombres de los voluntarios asistentes al evento)
               </label>
               <textarea
                 rows={2}
                 placeholder="Ej. Juan Pérez, Carmen Rojas, Luis Abad"
                 value={equipoApoyo}
                 onChange={(e) => setEquipoApoyo(e.target.value)}
-                className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
-                Aliados o Instituciones Participantes
-              </label>
-              <input
-                type="text"
-                placeholder="Otras organizaciones que colaboran (ej. Municipalidad, Parroquia local)"
-                value={aliados}
-                onChange={(e) => setAliados(e.target.value)}
                 className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
               />
             </div>

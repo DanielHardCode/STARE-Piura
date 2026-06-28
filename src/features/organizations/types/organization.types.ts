@@ -5,7 +5,6 @@
  * (diferente de SocialEvent en features/events/ que es el evento de entrega de bolsas).
  */
 
-export type PriorityLevel = 'alta' | 'media' | 'baja';
 export type InterventionType = 'educativa' | 'acompañamiento' | 'infraestructura';
 export type OrgEventStatus = 'pendiente' | 'en curso' | 'completado';
 
@@ -17,7 +16,6 @@ export interface Organization {
   sector_demografico: string;
   /** Lista de deficiencias detectadas (ej. "Sin Agua Potable"). */
   deficiencias_infraestructura: string[];
-  nivel_prioridad: PriorityLevel;
   /** Distrito de Piura donde se ubica la organización. */
   distrito: string;
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Organization, PriorityLevel } from '../types/organization';
+import { Organization } from '../types/organization';
 import { 
   Building2, 
   MapPin, 
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 interface OrganizationFormProps {
+  initialData?: Organization;
   onRegister: (org: Omit<Organization, 'id'>) => void;
   onClose: () => void;
 }
@@ -27,25 +28,24 @@ interface ToastMessage {
   text: string;
 }
 
-export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, onClose }) => {
+export const OrganizationForm: React.FC<OrganizationFormProps> = ({ initialData, onRegister, onClose }) => {
   const [step, setStep] = useState(1);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   // STEP 1: Datos Generales
-  const [nombre, setNombre] = useState('');
+  const [nombre, setNombre] = useState(initialData?.nombre || '');
   const [siglas, setSiglas] = useState('');
   const [tipoOrg, setTipoOrg] = useState('Comedor popular');
   const [customTipoOrg, setCustomTipoOrg] = useState('');
   const [estado, setEstado] = useState('Activo');
-  const [nivelPrioridad, setNivelPrioridad] = useState<PriorityLevel>('alta');
 
   // STEP 2: Ubicación
   const [pais, setPais] = useState('Perú');
   const [region, setRegion] = useState('Piura');
   const [provincia, setProvincia] = useState('Piura');
-  const [distrito, setDistrito] = useState('');
-  const [direccion, setDireccion] = useState('');
+  const [distrito, setDistrito] = useState(initialData?.distrito || '');
+  const [direccion, setDireccion] = useState(initialData?.direccion || '');
 
   // STEP 3: Persona encargada
   const [encargadoNombre, setEncargadoNombre] = useState('');
@@ -56,10 +56,10 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
 
   // STEP 4: Descripción y necesidades
   const [mision, setMision] = useState('');
-  const [poblacionAtiende, setPoblacionAtiende] = useState('');
+  const [poblacionAtiende, setPoblacionAtiende] = useState(initialData?.sector_demografico || '');
   const [tipoPoblacion, setTipoPoblacion] = useState('Población general');
   const [numBeneficiarios, setNumBeneficiarios] = useState<string>('');
-  const [principalesNecesidades, setPrincipalesNecesidades] = useState('');
+  const [principalesNecesidades, setPrincipalesNecesidades] = useState(initialData?.deficiencias_infraestructura?.join(', ') || '');
   const [observaciones, setObservaciones] = useState('');
 
   // Helper: Toast Trigger
@@ -135,7 +135,6 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
     setTipoOrg('Comedor popular');
     setCustomTipoOrg('');
     setEstado('Activo');
-    setNivelPrioridad('alta');
     setPais('Perú');
     setRegion('Piura');
     setProvincia('Piura');
@@ -196,7 +195,6 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
       direccion: direccion.trim(),
       sector_demografico: poblacionAtiende.trim() || tipoPoblacion,
       deficiencias_infraestructura: defs,
-      nivel_prioridad: nivelPrioridad,
       distrito: distrito.trim()
     });
 
@@ -209,7 +207,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
   };
 
   return (
-    <div className="relative bg-white border-2 border-slate-900 rounded-3xl p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full mx-auto">
+    <div className="relative bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-2xl w-full mx-auto text-slate-900 dark:text-white">
       
       {/* HEADER SECTION */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
@@ -218,10 +216,10 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
             <Building2 className="w-5 h-5" />
           </span>
           <div>
-            <h3 className="text-base font-sans font-black text-slate-800 uppercase tracking-tight">
-              Registrar Organización Beneficiaria
+            <h3 className="text-base font-sans font-black text-slate-800 dark:text-white uppercase tracking-tight">
+              {initialData ? 'Editar Organización Beneficiaria' : 'Registrar Organización Beneficiaria'}
             </h3>
-            <p className="text-[11px] font-medium text-slate-400">
+            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-400">
               Formulario de evaluación y diagnóstico regional (Piura)
             </p>
           </div>
@@ -344,27 +342,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
               </div>
             )}
 
-            <div>
-              <label className="block text-[10px] font-mono font-bold text-slate-500 mb-1 uppercase tracking-wider">
-                Prioridad de Atención *
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['alta', 'media', 'baja'] as PriorityLevel[]).map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setNivelPrioridad(level)}
-                    className={`py-2 px-3 border-2 rounded-xl text-xs font-bold uppercase transition-all tracking-wider ${
-                      nivelPrioridad === level
-                        ? 'bg-rose-100 border-rose-600 text-rose-950 font-black'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
-            </div>
+
           </div>
         )}
 
@@ -677,7 +655,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
               onClick={handleSave}
               className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-all shadow-md shrink-0"
             >
-              <Save className="w-4 h-4" /> Guardar Organización
+              <Save className="w-4 h-4" /> {initialData ? 'Actualizar Organización' : 'Guardar Organización'}
             </button>
           )}
         </div>
@@ -709,7 +687,7 @@ export const OrganizationForm: React.FC<OrganizationFormProps> = ({ onRegister, 
 
       {/* CONFIRMATION OVERLAY MODAL */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-[100] animate-fade-in font-sans">
+        <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-[100] animate-fade-in font-sans">
           <div className="bg-white border-4 border-slate-950 p-6 rounded-3xl max-w-sm w-full text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all">
             <div className="mx-auto w-12 h-12 bg-rose-50 border border-rose-300 text-rose-600 rounded-full flex items-center justify-center mb-3">
               <AlertTriangle className="w-6 h-6" />

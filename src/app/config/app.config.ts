@@ -19,4 +19,5 @@ export type ActiveScreen =
   | 'balance'
   | 'voluntario' // Se mantiene internamente pero se oculta del menú
   | 'organizaciones'
-  | 'eventos'; // Nueva sección independiente
+  | 'eventos' // Nueva sección independiente
+  | 'usuarios';

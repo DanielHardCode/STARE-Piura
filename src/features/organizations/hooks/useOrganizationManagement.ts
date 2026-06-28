@@ -4,7 +4,7 @@
  * Migrado desde src/hooks/ a su feature correspondiente.
  */
 import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
-import { Organization, OrgSocialEvent, OrgEventStatus, InterventionType, PriorityLevel } from '../types/organization.types';
+import { Organization, OrgSocialEvent, OrgEventStatus, InterventionType } from '../types/organization.types';
 
 const DEFAULT_ORGS: Organization[] = [
   {
@@ -13,7 +13,6 @@ const DEFAULT_ORGS: Organization[] = [
     direccion: 'Calle San Francisco Mz C Lote 12 - Bajo Piura',
     sector_demografico: 'Comedor Popular / Madres de Familia',
     deficiencias_infraestructura: ['Sin Agua Potable', 'Sin Techo Sombreador (Altas Temperaturas PIURA)', 'Sin almacén refrigerado'],
-    nivel_prioridad: 'alta' as PriorityLevel,
     distrito: 'Catacaos',
   },
   {
@@ -22,7 +21,6 @@ const DEFAULT_ORGS: Organization[] = [
     direccion: 'Kilómetro 45 Carretera Tambogrande',
     sector_demografico: 'Infancia Rural de Extrema Pobreza',
     deficiencias_infraestructura: ['Aulas de caña/madera', 'Sin conexión de red de agua', 'Riesgo de inundación Pluvial'],
-    nivel_prioridad: 'alta' as PriorityLevel,
     distrito: 'Tambogrande',
   },
   {
@@ -31,7 +29,6 @@ const DEFAULT_ORGS: Organization[] = [
     direccion: 'Asentamiento Humano El Indio Sector B',
     sector_demografico: 'Madres Lactantes y Niñez Temprana',
     deficiencias_infraestructura: ['Utensilios oxidados', 'Falta tanque elevado de agua'],
-    nivel_prioridad: 'media' as PriorityLevel,
     distrito: 'Castilla',
   },
 ];
@@ -83,6 +80,12 @@ export const useOrganizationManagement = () => {
     );
   };
 
+  const updateOrganization = (orgId: string, updatedOrg: Partial<Omit<Organization, 'id'>>) => {
+    setOrganizations(prev =>
+      prev.map(org => (org.id === orgId ? { ...org, ...updatedOrg } : org))
+    );
+  };
+
   const deleteOrganization = (orgId: string) => {
     setOrganizations(prev => prev.filter(org => org.id !== orgId));
     setOrgEvents(prev => prev.filter(ev => ev.organization_id !== orgId));
@@ -92,6 +95,7 @@ export const useOrganizationManagement = () => {
     organizations,
     orgEvents,
     addOrganization,
+    updateOrganization,
     addSocialEvent,
     updateEventStatus,
     deleteOrganization,
