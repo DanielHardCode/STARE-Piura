@@ -18,25 +18,33 @@ use Illuminate\Support\Facades\Route;
 | Endpoints consumidos por los repositorios SupabaseLaravel del frontend.
 | Las lecturas (GET) van directo a Supabase. Este API maneja escrituras.
 |
-| Recursos CRUD — cada apiResource registra:
-|   GET    /{resource}        → index()
-|   GET    /{resource}/{id}   → show()
-|   POST   /{resource}        → store()
-|   PUT    /{resource}/{id}   → update()
-|   DELETE /{resource}/{id}   → destroy()
+| Todas las rutas requieren autenticación via JWT de Supabase.
+| El middleware `auth.supabase` valida el token y carga el perfil.
+| El middleware `role` restringe endpoints según el rol del usuario.
 |
 */
 
-Route::apiResource('organizations', OrganizationController::class);
-Route::apiResource('mypes', MypeController::class);
-Route::apiResource('donors', DonorController::class);
-Route::apiResource('donations', DonationController::class);
-Route::apiResource('events', EventController::class);
-Route::apiResource('supply-items', SupplyItemController::class)->parameters(['supply-items' => 'supplyItem']);
-Route::apiResource('transactions', TransactionController::class);
-Route::apiResource('notifications', NotificationController::class);
+Route::middleware('auth.supabase')->group(function () {
 
-// ─── Rutas adicionales no cubiertas por apiResource ────────────────
-Route::get('/balances', [TransactionController::class, 'getBalances']);
-Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    // ─── Rutas CRUD principales (coordinador o admin) ──────────────
+    Route::middleware('role:admin,coordinador,voluntario')->group(function () {
+        Route::apiResource('organizations', OrganizationController::class);
+        Route::apiResource('mypes', MypeController::class);
+        Route::apiResource('donors', DonorController::class);
+        Route::apiResource('donations', DonationController::class);
+        Route::apiResource('events', EventController::class);
+        Route::apiResource('supply-items', SupplyItemController::class)->parameters(['supply-items' => 'supplyItem']);
+        Route::apiResource('transactions', TransactionController::class);
+        Route::apiResource('notifications', NotificationController::class);
+    });
+
+    // ─── Rutas adicionales ─────────────────────────────────────────
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // ─── Rutas exclusivas para admin ────────────────────────────────
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/balances', [TransactionController::class, 'getBalances']);
+    });
+
+});
