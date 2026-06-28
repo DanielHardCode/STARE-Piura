@@ -12,6 +12,21 @@ class SupplyItemController extends Controller
 {
     use ApiResponse;
 
+    public function index()
+    {
+        $items = SupplyItem::orderBy('created_at', 'desc')->get();
+        return $this->success($items);
+    }
+
+    public function show(string $id)
+    {
+        $item = SupplyItem::find($id);
+        if (!$item) {
+            return $this->error('Ítem no encontrado', 404);
+        }
+        return $this->success($item);
+    }
+
     public function store(StoreSupplyItemRequest $request)
     {
         $item = SupplyItem::create([
@@ -24,8 +39,21 @@ class SupplyItemController extends Controller
 
     public function update(UpdateSupplyItemRequest $request, string $id)
     {
-        $item = SupplyItem::findOrFail($id);
+        $item = SupplyItem::find($id);
+        if (!$item) {
+            return $this->error('Ítem no encontrado', 404);
+        }
         $item->update($request->validated());
         return $this->success($item->fresh());
+    }
+
+    public function destroy(string $id)
+    {
+        $item = SupplyItem::find($id);
+        if (!$item) {
+            return $this->error('Ítem no encontrado', 404);
+        }
+        $item->delete();
+        return $this->noContent();
     }
 }

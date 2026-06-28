@@ -12,6 +12,21 @@ class DonationController extends Controller
 {
     use ApiResponse;
 
+    public function index()
+    {
+        $donations = Donation::orderBy('created_at', 'desc')->get();
+        return $this->success($donations);
+    }
+
+    public function show(string $id)
+    {
+        $donation = Donation::find($id);
+        if (!$donation) {
+            return $this->error('Donación no encontrada', 404);
+        }
+        return $this->success($donation);
+    }
+
     public function store(StoreDonationRequest $request)
     {
         $donation = Donation::create([
@@ -24,8 +39,21 @@ class DonationController extends Controller
 
     public function update(UpdateDonationRequest $request, string $id)
     {
-        $donation = Donation::findOrFail($id);
+        $donation = Donation::find($id);
+        if (!$donation) {
+            return $this->error('Donación no encontrada', 404);
+        }
         $donation->update($request->validated());
         return $this->success($donation->fresh());
+    }
+
+    public function destroy(string $id)
+    {
+        $donation = Donation::find($id);
+        if (!$donation) {
+            return $this->error('Donación no encontrada', 404);
+        }
+        $donation->delete();
+        return $this->noContent();
     }
 }

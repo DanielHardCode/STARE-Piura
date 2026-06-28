@@ -18,29 +18,25 @@ use Illuminate\Support\Facades\Route;
 | Endpoints consumidos por los repositorios SupabaseLaravel del frontend.
 | Las lecturas (GET) van directo a Supabase. Este API maneja escrituras.
 |
+| Recursos CRUD — cada apiResource registra:
+|   GET    /{resource}        → index()
+|   GET    /{resource}/{id}   → show()
+|   POST   /{resource}        → store()
+|   PUT    /{resource}/{id}   → update()
+|   DELETE /{resource}/{id}   → destroy()
+|
 */
 
-Route::post('/organizations', [OrganizationController::class, 'store']);
-Route::put('/organizations/{id}', [OrganizationController::class, 'update']);
-Route::delete('/organizations/{id}', [OrganizationController::class, 'destroy']);
+Route::apiResource('organizations', OrganizationController::class);
+Route::apiResource('mypes', MypeController::class);
+Route::apiResource('donors', DonorController::class);
+Route::apiResource('donations', DonationController::class);
+Route::apiResource('events', EventController::class);
+Route::apiResource('supply-items', SupplyItemController::class)->parameters(['supply-items' => 'supplyItem']);
+Route::apiResource('transactions', TransactionController::class);
+Route::apiResource('notifications', NotificationController::class);
 
-Route::post('/mypes', [MypeController::class, 'store']);
-Route::put('/mypes/{id}', [MypeController::class, 'update']);
-
-Route::post('/donors', [DonorController::class, 'store']);
-
-Route::post('/donations', [DonationController::class, 'store']);
-Route::put('/donations/{id}', [DonationController::class, 'update']);
-
-Route::post('/events', [EventController::class, 'store']);
-Route::put('/events/{id}', [EventController::class, 'update']);
-
-Route::post('/supply-items', [SupplyItemController::class, 'store']);
-Route::put('/supply-items/{id}', [SupplyItemController::class, 'update']);
-
-Route::post('/transactions', [TransactionController::class, 'store']);
+// ─── Rutas adicionales no cubiertas por apiResource ────────────────
 Route::get('/balances', [TransactionController::class, 'getBalances']);
-
-Route::post('/notifications', [NotificationController::class, 'store']);
 Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
