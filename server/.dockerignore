@@ -1,4 +1,3 @@
-docker-laravel/
 vendor/
 node_modules/
 .git/
