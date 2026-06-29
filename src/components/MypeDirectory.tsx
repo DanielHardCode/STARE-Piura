@@ -705,11 +705,6 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                       onChange={(e) => setEditDistrict(e.target.value as PiuraDistrict)}
                       className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
                     >
-                      <option value="Piura Centro">Piura Centro</option>
-                      <option value="Catacaos">Catacaos (Bajo Piura)</option>
-                      onChange={(e) => setEditDistrict(e.target.value as any)}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
-                    >
                       <option value="Piura">Piura</option>
                       <option value="Castilla">Castilla</option>
                       <option value="Catacaos">Catacaos</option>

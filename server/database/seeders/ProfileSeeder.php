@@ -15,7 +15,7 @@ class ProfileSeeder extends Seeder
 
         $profiles = [
             [
-                'id' => (string) Str::uuid(),
+                'id' => '3c743698-0df0-4158-a1b9-7fcd72633380',
                 'email' => 'admin@starepiura.org',
                 'nombre' => 'Admin Central',
                 'role' => 'admin',
