@@ -9,7 +9,7 @@
 
 /// <reference types="vite/client" />
 
-export type DataProvider = 'mock' | 'supabase_laravel';
+export type DataProvider = 'mock' | 'supabase_laravel' | 'supabase';
 
 export const config = {
   /** Proveedor de datos activo. Cambia solo la variable de entorno. */
