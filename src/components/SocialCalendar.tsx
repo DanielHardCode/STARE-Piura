@@ -282,12 +282,12 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
               exit={{ scale: 0.95, opacity: 0 }}
               className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl"
             >
-              <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+              <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-amber-400" />
-                  <span className="font-sans font-bold text-sm tracking-tight text-white uppercase">PROGRAMAR NUEVO EVENTO (PIURA)</span>
+                  <Calendar className="w-5 h-5 text-amber-500" />
+                  <span className="font-sans font-bold text-sm tracking-tight text-slate-900 uppercase">PROGRAMAR NUEVO EVENTO (PIURA)</span>
                 </div>
-                <button onClick={() => setShowAddEventModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setShowAddEventModal(false)} className="text-slate-400 hover:text-slate-900 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -299,7 +299,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                     <select
                       value={newDistrict}
                       onChange={(e) => setNewDistrict(e.target.value as PiuraDistrict)}
-                      className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans focus:border-indigo-500 focus:outline-hidden"
+                      className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-900 focus:border-indigo-500 focus:outline-hidden"
                     >
                       {PIURA_DISTRICTS.map((dst) => (
                         <option key={dst} value={dst}>{dst}</option>
@@ -311,7 +311,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                     <select
                       value={newDay}
                       onChange={(e) => setNewDay(e.target.value)}
-                      className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans focus:border-indigo-500 focus:outline-hidden"
+                      className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-900 focus:border-indigo-500 focus:outline-hidden"
                     >
                       {June2026Days.map((day) => (
                         <option key={day} value={day.toString().padStart(2, '0')}>
@@ -330,7 +330,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                     placeholder="Ej. Campaña Médica y Entrega de Alimentos - Sechura"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-hidden font-sans"
+                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-hidden font-sans"
                   />
                 </div>
 
@@ -342,7 +342,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                     placeholder="Ej. 130 mamás de la Olla Común - San Martín en Tambogrande"
                     value={newAudience}
                     onChange={(e) => setNewAudience(e.target.value)}
-                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-hidden font-sans"
+                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-hidden font-sans"
                   />
                 </div>
 
@@ -353,7 +353,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                     placeholder="Escriba condiciones climáticas, de acceso o contactos locales en Piura..."
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-hidden font-sans"
+                    className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-hidden font-sans"
                   />
                 </div>
 
@@ -374,7 +374,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                       placeholder="Ej. Aceite vegetal"
                       value={supplyInput}
                       onChange={(e) => setSupplyInput(e.target.value)}
-                      className="flex-1 text-xs py-2.5 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-hidden"
+                      className="flex-1 text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-indigo-500 focus:outline-hidden"
                     />
                     <button
                       type="button"
@@ -411,7 +411,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                                   updated[index].qty = parseInt(e.target.value) || 1;
                                   setNewSupplies(updated);
                                 }}
-                                className="w-12 text-center text-xs border border-slate-200 font-mono py-1 rounded-lg"
+                                className="w-12 text-center text-xs border border-slate-200 bg-white text-slate-900 font-mono py-1 rounded-lg"
                               />
                             </div>
                             <div className="flex items-center gap-1">
@@ -426,7 +426,7 @@ export const SocialCalendar: React.FC<SocialCalendarProps> = ({
                                   updated[index].price = parseFloat(e.target.value) || 0.1;
                                   setNewSupplies(updated);
                                 }}
-                                className="w-14 text-center text-xs border border-slate-200 font-mono py-1 rounded-lg"
+                                className="w-14 text-center text-xs border border-slate-200 bg-white text-slate-900 font-mono py-1 rounded-lg"
                               />
                             </div>
                             <button

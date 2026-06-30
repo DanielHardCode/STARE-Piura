@@ -258,7 +258,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl max-w-2xl w-full mx-auto relative text-slate-900 dark:text-white">
+    <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xl max-w-2xl w-full mx-auto relative text-slate-900">
       
       {/* HEADER */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
@@ -267,10 +267,10 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
             <Calendar className="w-5 h-5" />
           </span>
           <div>
-            <h3 className="text-base font-sans font-black text-slate-800 dark:text-white uppercase tracking-tight">
+            <h3 className="text-base font-sans font-black text-slate-800 uppercase tracking-tight">
               PROGRAMAR NUEVO EVENTO (PIURA)
             </h3>
-            <p className="text-[11px] font-medium text-slate-400 dark:text-slate-400">
+            <p className="text-[11px] font-medium text-slate-400">
               Crea una nueva jornada de apoyo vinculada a una institución piurana
             </p>
           </div>
@@ -322,7 +322,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Ej. Campaña Médica y Entrega de Alimentos - Sechura"
                   value={nombreEvento}
                   onChange={(e) => setNombreEvento(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
 
@@ -335,7 +335,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Ej. Campaña de salud, Apoyo alimentario, Refacción escolar"
                   value={tipoEvento}
                   onChange={(e) => setTipoEvento(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
             </div>
@@ -348,7 +348,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                 <select
                   value={selectedOrgId}
                   onChange={(e) => setSelectedOrgId(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white font-sans font-bold text-slate-800 focus:border-slate-900 focus:outline-hidden"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white font-sans font-bold text-slate-900 focus:border-slate-900 focus:outline-hidden"
                 >
                   <option value="" disabled>-- Selecciona una institución registrada --</option>
                   {organizations.map((org) => (
@@ -368,7 +368,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   value={problematica}
                   onChange={(e) => setProblematica(e.target.value)}
                   placeholder="Explique la problemática social que se busca atender..."
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
             </div>
@@ -382,7 +382,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   type="date"
                   value={fechaInicio}
                   onChange={(e) => setFechaInicio(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850 font-bold"
+                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900 font-bold"
                 />
               </div>
               <div>
@@ -393,7 +393,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   type="time"
                   value={horaInicio}
                   onChange={(e) => setHoraInicio(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850 font-bold"
+                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900 font-bold"
                 />
               </div>
               <div>
@@ -404,7 +404,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   type="time"
                   value={horaFin}
                   onChange={(e) => setHoraFin(e.target.value)}
-                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850 font-bold"
+                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900 font-bold"
                 />
               </div>
             </div>
@@ -433,7 +433,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Nombre de la persona que lidera la actividad"
                   value={responsable}
                   onChange={(e) => setResponsable(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
               <div>
@@ -445,7 +445,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Ej. 999 888 777"
                   value={responsableCelular}
                   onChange={(e) => setResponsableCelular(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
             </div>
@@ -460,7 +460,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Voluntario responsable de trazabilidad"
                   value={responsableTrazabilidad}
                   onChange={(e) => setResponsableTrazabilidad(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
               <div>
@@ -472,7 +472,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Ej. 999 888 777"
                   value={responsableTrazabilidadCelular}
                   onChange={(e) => setResponsableTrazabilidadCelular(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
             </div>
@@ -495,7 +495,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                     const num = parseInt(val);
                     if (num <= 20) setVoluntariosRequeridos(num.toString());
                   }}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
               <div>
@@ -507,7 +507,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                   placeholder="Ej. Municipalidad, Parroquia local"
                   value={aliados}
                   onChange={(e) => setAliados(e.target.value)}
-                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                  className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
                 />
               </div>
             </div>
@@ -521,7 +521,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                 placeholder="Ej. Juan Pérez, Carmen Rojas, Luis Abad"
                 value={equipoApoyo}
                 onChange={(e) => setEquipoApoyo(e.target.value)}
-                className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                className="w-full text-xs py-2.5 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
               />
             </div>
           </div>
@@ -549,7 +549,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                     placeholder="Producto (ej. Aceite vegetal)"
                     value={inputProducto}
                     onChange={(e) => setInputProducto(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-250 bg-white"
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-250 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900"
                   />
                 </div>
                 <div className="sm:col-span-1.5">
@@ -559,7 +559,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                     placeholder="Meta cant"
                     value={inputMeta}
                     onChange={(e) => setInputMeta(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-250 bg-white"
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-250 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900"
                   />
                 </div>
                 <div className="sm:col-span-1.5">
@@ -570,7 +570,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                     placeholder="P.U. (S/)"
                     value={inputPu}
                     onChange={(e) => setInputPu(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-250 bg-white"
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-250 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900"
                   />
                 </div>
               </div>
@@ -647,7 +647,7 @@ export const EventPlanner: React.FC<EventPlannerProps> = ({
                 placeholder="Notas sobre transporte, refrigeración, almacenamiento o instalación..."
                 value={observacionesLogistica}
                 onChange={(e) => setObservacionesLogistica(e.target.value)}
-                className="w-full text-xs py-2 px-3 rounded-xl border-2 border-slate-200 focus:border-slate-900 focus:outline-hidden font-sans text-slate-850"
+                className="w-full text-xs py-2 px-3 rounded-xl border-2 border-slate-200 bg-white focus:border-slate-900 focus:outline-hidden font-sans text-slate-900"
               />
             </div>
           </div>
