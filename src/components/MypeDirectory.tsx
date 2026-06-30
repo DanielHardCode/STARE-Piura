@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PiuraDistrict, MypeRubro } from '@/types/index';
 import { MypeProfile } from '../features/mypes';
 import { 
@@ -43,7 +43,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
 }) => {
   const { mypes: hookMypes, registerMype: hookRegisterMype, selectMypeForDonation: hookSelectMypeForDonation } = useMypes();
   const { getDonationMetrics } = useDonations();
-  const { counts: hookCounts, amounts: hookAmounts } = getDonationMetrics();
+  const { counts: hookCounts, amounts: hookAmounts } = useMemo(() => getDonationMetrics(), [getDonationMetrics]);
 
   const mypes = propMypes || hookMypes;
   const onRegisterMype = propOnRegisterMype || hookRegisterMype;
@@ -150,7 +150,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
   };
 
   // Validate and submit new Mype
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -193,7 +193,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
       registeredAt: new Date().toISOString().split('T')[0]
     };
 
-    onRegisterMype(newMype);
+    await onRegisterMype(newMype);
     setSuccessMsg(`✅ ¡MYPE "${name.trim()}" afiliada con éxito en el sistema STARE Piura!`);
     
     // Clear inputs
@@ -314,7 +314,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     placeholder="Ej. Comercial Rey Momo"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
                   />
                 </div>
               </div>
@@ -332,7 +332,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     placeholder="Ej. 20124578963"
                     value={ruc}
                     onChange={(e) => setRuc(e.target.value.replace(/\D/g, ''))}
-                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-mono text-slate-800 bg-white"
+                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-none font-mono text-slate-800 bg-white"
                   />
                 </div>
               </div>
@@ -349,7 +349,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     placeholder="Ej. Sra. Clara Inga"
                     value={contactPerson}
                     onChange={(e) => setContactPerson(e.target.value)}
-                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
                   />
                 </div>
               </div>
@@ -367,7 +367,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     placeholder="Ej. 913456789"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                    className="w-full text-xs py-2 px-3 pl-9 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
                   />
                 </div>
               </div>
@@ -380,7 +380,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 <select
                   value={district}
                   onChange={(e) => setDistrict(e.target.value as PiuraDistrict)}
-                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="Piura Centro">Piura Centro</option>
                   <option value="Catacaos">Catacaos (Bajo Piura)</option>
@@ -402,7 +402,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as MypeRubro)}
-                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                  className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-none"
                 >
                   {MYPE_CATEGORIES.map(cat => (
                     <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -422,7 +422,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
               </button>
               <button
                 type="submit"
-                className="py-2 px-6 bg-indigo-600 hover:bg-indigo-755 hover:bg-indigo-700 text-white font-sans font-bold text-xs rounded-xl transition-all cursor-pointer shadow-2xs"
+                className="py-2 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-sans font-bold text-xs rounded-xl transition-all cursor-pointer shadow-2xs"
               >
                 Completar Afiliación Zonal
               </button>
@@ -445,19 +445,19 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
               setSearchQuery(e.target.value);
               setVisibleCount(pageSize); // reset visible count
             }}
-            className="w-full text-xs py-2.5 px-3 pl-9 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-hidden text-slate-800"
+            className="w-full text-xs py-2.5 px-3 pl-9 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none text-slate-800"
           />
         </div>
 
         {/* District Filter Selector */}
-        <div className="sm:col-span-3 select-wrapper">
+        <div className="sm:col-span-3">
           <select
             value={selectedDistrictFilter}
             onChange={(e) => {
               setSelectedDistrictFilter(e.target.value);
               setVisibleCount(pageSize);
             }}
-            className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+            className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-none"
           >
             <option value="todos">🚚 Todos los Distritos</option>
             <option value="Piura Centro">Piura Centro</option>
@@ -473,14 +473,14 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
         </div>
 
         {/* Category Filter Selector */}
-        <div className="sm:col-span-3 select-wrapper">
+        <div className="sm:col-span-3">
           <select
             value={selectedCategoryFilter}
             onChange={(e) => {
               setSelectedCategoryFilter(e.target.value);
               setVisibleCount(pageSize);
             }}
-            className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+            className="w-full text-xs py-2.5 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-none"
           >
             <option value="todos">🏪 Todos los Rubros</option>
             {MYPE_CATEGORIES.map(cat => (
@@ -503,7 +503,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
               setPageSize(size);
               setVisibleCount(size === -1 ? filteredMypes.length : size);
             }}
-            className="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 font-bold focus:outline-hidden cursor-pointer"
+            className="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-700 font-bold focus:outline-none cursor-pointer"
           >
             <option value={10}>10 en 10</option>
             <option value={20}>20 en 20</option>
@@ -529,7 +529,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
             return (
               <div 
                 key={m.id}
-                className="bg-slate-50 border border-slate-150 rounded-2xl p-4.5 hover:border-indigo-500 hover:shadow-xs transition-all flex flex-col justify-between space-y-3.5"
+                className="bg-slate-50 border border-slate-150 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xs transition-all flex flex-col justify-between space-y-3"
               >
                 
                 {/* Header card metrics */}
@@ -538,7 +538,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     <span className="bg-indigo-50 text-indigo-700 font-mono font-bold text-[9px] px-2 py-0.5 rounded uppercase tracking-wider">
                       {m.category}
                     </span>
-                    <h4 className="font-sans font-black text-slate-900 text-sm leading-tight uppercase clamp-1">
+                    <h4 className="font-sans font-black text-slate-900 text-sm leading-tight uppercase">
                       {m.name}
                     </h4>
                   </div>
@@ -569,7 +569,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 </div>
 
                 {/* Tech footer details */}
-                <div className="text-xs space-y-1 text-slate-550 text-slate-500 font-sans text-left">
+                 <div className="text-xs space-y-1 text-slate-500 font-sans text-left">
                   <div className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span><strong>RUC:</strong> {m.ruc}</span>
@@ -636,7 +636,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 onClick={() => setEditingMype(null)}
                 className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                <X className="w-4.5 h-4.5" />
+                <X className="w-4 h-4" />
               </button>
 
               <div className="flex items-center gap-2 mb-4">
