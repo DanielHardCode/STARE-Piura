@@ -28,7 +28,7 @@ import { useMypeStore } from '@/stores/mypes';
 
 interface MypeDirectoryProps {
   mypes?: MypeProfile[];
-  onRegisterMype?: (newMype: MypeProfile) => void;
+  onRegisterMype?: (newMype: MypeProfile) => void | Promise<void>;
   onSelectMypeForDonation?: (mype: MypeProfile) => void;
   donationCounts?: Record<string, number>; // Maps mypeName to count of donations
   donationAmounts?: Record<string, number>; // Maps mypeName to total financial sum
@@ -622,26 +622,26 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
         </div>
       )}
 
-      {/* EDIT MODAL DIALOG (GLASS TRANSLUCENT) */}
+      {/* EDIT MODAL DIALOG */}
       <AnimatePresence>
         {editingMype && (
-          <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
+          <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto font-sans">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 p-6 rounded-3xl max-w-lg w-full relative border border-slate-100 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-white"
+              className="bg-white p-6 rounded-3xl max-w-lg w-full relative border border-slate-100 shadow-2xl text-slate-900"
             >
               <button
                 onClick={() => setEditingMype(null)}
-                className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="flex items-center gap-2 mb-4">
-                <Store className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                <Store className="w-5 h-5 text-indigo-600" />
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
                   Editar Comercio: {editingMype.name}
                 </h4>
               </div>
@@ -655,7 +655,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
 
               <form onSubmit={handleUpdateSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
+                  <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
                     Razón Social / Nombre Comercial
                   </label>
                   <input
@@ -663,13 +663,13 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     required
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
                       Número de RUC
                     </label>
                     <input
@@ -677,12 +677,12 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                       maxLength={11}
                       value={editRuc}
                       onChange={(e) => setEditRuc(e.target.value.replace(/\D/g, ''))}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-mono text-slate-800 dark:text-white bg-white dark:bg-slate-800"
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-mono text-slate-800 bg-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
                       Celular (Yape/Plin)
                     </label>
                     <input
@@ -690,67 +690,47 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                       maxLength={9}
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, ''))}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
                       Distrito
                     </label>
                     <select
                       value={editDistrict}
                       onChange={(e) => setEditDistrict(e.target.value as PiuraDistrict)}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-hidden"
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-none"
                     >
                       <option value="Piura Centro">Piura Centro</option>
                       <option value="Catacaos">Catacaos (Bajo Piura)</option>
-                      onChange={(e) => setEditDistrict(e.target.value as any)}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
-                    >
-                      <option value="Piura">Piura</option>
                       <option value="Castilla">Castilla</option>
-                      <option value="Catacaos">Catacaos</option>
-                      <option value="Sullana">Sullana</option>
-                      <option value="Paita">Paita</option>
-                      <option value="Sechura">Sechura</option>
-                      <option value="Talara">Talara</option>
+                      <option value="Veintiséis de Octubre">Veintiséis de Octubre</option>
+                      <option value="Tambogrande">Tambogrande (Alto Piura)</option>
                       <option value="Chulucanas">Chulucanas</option>
+                      <option value="Sechura">Sechura</option>
+                      <option value="Paita">Paita</option>
+                      <option value="Talara">Talara</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                      Categoría
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                      Rubro
                     </label>
                     <select
                       value={editCategory}
                       onChange={(e) => setEditCategory(e.target.value as MypeRubro)}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 bg-white font-sans text-slate-800 focus:border-indigo-500 focus:outline-none"
                     >
                       {MYPE_CATEGORIES.map(cat => (
                         <option key={cat.value} value={cat.value}>{cat.label}</option>
                       ))}
                     </select>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
-                    Etiquetas Descriptivas (separadas por comas)
-                  </label>
-                  <input
-                    type="text"
-                    value={editTags}
-                    onChange={(e) => setEditTags(e.target.value)}
-                    placeholder="Ej. panadería, pastelería, tortas"
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
-                  />
-                  <p className="text-[9px] text-slate-400 mt-1">
-                    Esto ayudará a los donantes a encontrar el negocio fácilmente.
-                  </p>
                 </div>
 
                 <div>
@@ -761,15 +741,15 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     type="text"
                     value={editContactPerson}
                     onChange={(e) => setEditContactPerson(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 bg-white"
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
                   />
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 mt-4">
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setEditingMype(null)}
-                    className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    className="py-2 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-600 transition-colors cursor-pointer"
                   >
                     Cerrar
                   </button>
