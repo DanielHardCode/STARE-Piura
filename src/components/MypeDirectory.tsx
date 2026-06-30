@@ -1,25 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import { PiuraDistrict, MypeRubro } from '@/types/index';
 import { MypeProfile } from '../features/mypes';
-import { 
-  Building2, 
-  Store, 
-  Search, 
-  Plus, 
-  User, 
-  Smartphone, 
-  FileText, 
-  MapPin, 
-  Coins, 
-  Calendar, 
-  TrendingUp, 
-  UserCheck, 
+import {
+  Building2,
+  Store,
+  Search,
+  Plus,
+  User,
+  Smartphone,
+  FileText,
+  MapPin,
+  Coins,
+  UserCheck,
   CheckCircle,
   HelpCircle,
   AlertCircle,
   Edit,
-  X,
-  Filter
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useMypes } from '../features/mypes';
@@ -28,7 +25,7 @@ import { useMypeStore } from '@/stores/mypes';
 
 interface MypeDirectoryProps {
   mypes?: MypeProfile[];
-  onRegisterMype?: (newMype: MypeProfile) => void | Promise<void>;
+  onRegisterMype?: (newMype: MypeProfile) => void;
   onSelectMypeForDonation?: (mype: MypeProfile) => void;
   donationCounts?: Record<string, number>; // Maps mypeName to count of donations
   donationAmounts?: Record<string, number>; // Maps mypeName to total financial sum
@@ -58,7 +55,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
   const [contactPerson, setContactPerson] = useState('');
   const [district, setDistrict] = useState<PiuraDistrict>('Piura Centro');
   const [category, setCategory] = useState<MypeRubro>('Bodega');
-  
+
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrictFilter, setSelectedDistrictFilter] = useState<string>('todos');
@@ -193,9 +190,11 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
       registeredAt: new Date().toISOString().split('T')[0]
     };
 
-    await onRegisterMype(newMype);
+    if (onRegisterMype) {
+      await onRegisterMype(newMype);
+    }
     setSuccessMsg(`✅ ¡MYPE "${name.trim()}" afiliada con éxito en el sistema STARE Piura!`);
-    
+
     // Clear inputs
     setName('');
     setRuc('');
@@ -212,30 +211,30 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
 
   // Filter list
   const filteredMypes = mypes.filter(m => {
-    const matchesSearch = 
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch =
+      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.ruc.includes(searchQuery) ||
       (m.contactPerson && m.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesDistrict = 
-      selectedDistrictFilter === 'todos' || 
+
+    const matchesDistrict =
+      selectedDistrictFilter === 'todos' ||
       m.district === selectedDistrictFilter;
 
-    const matchesCategory = 
-      selectedCategoryFilter === 'todos' || 
+    const matchesCategory =
+      selectedCategoryFilter === 'todos' ||
       m.category === selectedCategoryFilter;
 
     return matchesSearch && matchesDistrict && matchesCategory;
   });
 
   // Paginación lógica
-  const displayedMypes = pageSize === -1 
-    ? filteredMypes 
+  const displayedMypes = pageSize === -1
+    ? filteredMypes
     : filteredMypes.slice(0, visibleCount);
 
   return (
     <div className="bg-white border border-slate-100 rounded-3xl p-6 lg:p-8 shadow-sm transition-all space-y-6">
-      
+
       {/* Actionable Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-150 pb-5">
         <div className="flex items-center gap-3">
@@ -300,7 +299,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
+
               {/* Name */}
               <div>
                 <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
@@ -433,7 +432,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
 
       {/* FILTER & SEARCH PRESET */}
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-        
+
         {/* Search input */}
         <div className="sm:col-span-6 relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -527,11 +526,11 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
             const totalMoney = donationAmounts[m.name] || 0;
 
             return (
-              <div 
+              <div
                 key={m.id}
                 className="bg-slate-50 border border-slate-150 rounded-2xl p-4 hover:border-indigo-500 hover:shadow-xs transition-all flex flex-col justify-between space-y-3"
               >
-                
+
                 {/* Header card metrics */}
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="space-y-1 max-w-[70%] text-left">
@@ -542,7 +541,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                       {m.name}
                     </h4>
                   </div>
-                  
+
                   <div className="text-right shrink-0">
                     <span className="block text-[10px] text-slate-400 font-mono">DISTRITO</span>
                     <span className="inline-flex items-center gap-0.5 text-slate-800 font-sans font-bold text-xs bg-white border border-slate-150 px-2 py-0.5 rounded-lg shadow-3xs mt-0.5">
@@ -569,7 +568,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                 </div>
 
                 {/* Tech footer details */}
-                 <div className="text-xs space-y-1 text-slate-500 font-sans text-left">
+                <div className="text-xs space-y-1 text-slate-500 font-sans text-left">
                   <div className="flex items-center gap-1">
                     <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span><strong>RUC:</strong> {m.ruc}</span>
@@ -622,26 +621,26 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
         </div>
       )}
 
-      {/* EDIT MODAL DIALOG */}
+      {/* EDIT MODAL DIALOG (GLASS TRANSLUCENT) */}
       <AnimatePresence>
         {editingMype && (
-          <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto font-sans">
-            <motion.div 
+          <div className="fixed inset-0 bg-slate-950/60 flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in font-sans">
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white p-6 rounded-3xl max-w-lg w-full relative border border-slate-100 shadow-2xl text-slate-900"
+              className="bg-white dark:bg-slate-900 p-6 rounded-3xl max-w-lg w-full relative border border-slate-100 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-white"
             >
               <button
                 onClick={() => setEditingMype(null)}
-                className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="flex items-center gap-2 mb-4">
-                <Store className="w-5 h-5 text-indigo-600" />
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">
+                <Store className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
                   Editar Comercio: {editingMype.name}
                 </h4>
               </div>
@@ -655,7 +654,7 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
 
               <form onSubmit={handleUpdateSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                  <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
                     Razón Social / Nombre Comercial
                   </label>
                   <input
@@ -663,13 +662,13 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                     required
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-sans text-slate-800 bg-white"
+                    className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-sans text-slate-800 dark:text-white bg-white dark:bg-slate-800"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
                       Número de RUC
                     </label>
                     <input
@@ -677,12 +676,12 @@ export const MypeDirectory: React.FC<MypeDirectoryProps> = ({
                       maxLength={11}
                       value={editRuc}
                       onChange={(e) => setEditRuc(e.target.value.replace(/\D/g, ''))}
-                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:outline-none font-mono text-slate-800 bg-white"
+                      className="w-full text-xs py-2 px-3 rounded-xl border border-slate-205 dark:border-slate-700 focus:border-indigo-500 focus:outline-hidden font-mono text-slate-800 dark:text-white bg-white dark:bg-slate-800"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-sans font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                    <label className="block text-[10px] font-sans font-bold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">
                       Celular (Yape/Plin)
                     </label>
                     <input
