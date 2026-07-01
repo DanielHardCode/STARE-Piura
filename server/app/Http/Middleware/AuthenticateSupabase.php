@@ -52,7 +52,7 @@ class AuthenticateSupabase
             // 3. Buscar clave por kid
             if (!isset($keys[$kid])) {
                 // Rotación de claves: re-consultar JWKS
-                Cache::forget('supabase_jwks');
+                Cache::store('file')->forget('supabase_jwks');
                 $keys = $this->getJwksKeys($supabaseUrl, $anonKey);
             }
 
@@ -90,38 +90,44 @@ class AuthenticateSupabase
 
     private function getJwksKeys(string $supabaseUrl, string $anonKey): array
     {
-        $fromCache = true;
+        $cache = Cache::store('file');
+        $cacheKey = 'supabase_jwks';
 
-        $jwksArray = Cache::remember('supabase_jwks', 86400, function () use ($supabaseUrl, $anonKey, &$fromCache) {
-            $fromCache = false;
+        $jwksArray = $cache->get($cacheKey);
 
-            $baseUrl = rtrim(trim($supabaseUrl), '/');
-            $jwksUrl = "{$baseUrl}/auth/v1/.well-known/jwks.json";
+        if ($jwksArray !== null) {
+            logger()->debug('JWKS obtenido desde caché (file)');
+            return JWK::parseKeySet($jwksArray, 'ES256');
+        }
 
-            $isLocal = app()->environment('local') || config('app.debug');
+        logger()->info('Consultando JWKS de Supabase', ['url' => "{$supabaseUrl}/auth/v1/.well-known/jwks.json"]);
 
-            $http = Http::timeout(5)->withHeaders(['apikey' => $anonKey]);
+        $baseUrl = rtrim(trim($supabaseUrl), '/');
+        $jwksUrl = "{$baseUrl}/auth/v1/.well-known/jwks.json";
 
-            if ($isLocal) {
-                $http->withOptions(['verify' => false]);
-                logger()->warning('Verificación SSL desactivada para petición JWKS a Supabase (entorno local).');
-            }
+        $isLocal = app()->environment('local') || config('app.debug');
 
-            logger()->info('Consultando JWKS de Supabase', ['url' => $jwksUrl]);
+        $http = Http::timeout(5)->withHeaders(['apikey' => $anonKey]);
 
-            $response = $http->get($jwksUrl);
+        if ($isLocal) {
+            $http->withOptions(['verify' => false]);
+            logger()->warning('Verificación SSL desactivada para petición JWKS a Supabase (entorno local).');
+        }
 
-            if (!$response->successful()) {
-                throw new \Exception(
-                    'Error al obtener JWKS de Supabase: HTTP ' . $response->status()
-                );
-            }
+        $response = $http->get($jwksUrl);
 
-            return $response->json();
-        });
+        if (!$response->successful()) {
+            throw new \Exception(
+                'Error al obtener JWKS de Supabase: HTTP ' . $response->status()
+            );
+        }
 
-        logger()->debug($fromCache ? 'JWKS obtenido desde caché' : 'JWKS obtenido desde endpoint');
+        $jwksArray = $response->json();
 
-        return JWK::parseKeySet($jwksArray ?? ['keys' => []], 'ES256');
+        $cache->put($cacheKey, $jwksArray, 86400);
+
+        logger()->info('JWKS obtenido desde endpoint y cacheado en archivo');
+
+        return JWK::parseKeySet($jwksArray, 'ES256');
     }
 }
