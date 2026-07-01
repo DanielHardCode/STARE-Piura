@@ -14,7 +14,7 @@ class StoreSupplyItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'event_id' => 'required|string|exists:events,id',
+            'event_id' => 'required|string|max:50',
             'nombre' => 'required|string|max:255',
             'categoria' => 'required|string|in:viveres,medicina,abrigo,limpieza,educacion,otro',
             'unidad' => 'required|string|max:50',

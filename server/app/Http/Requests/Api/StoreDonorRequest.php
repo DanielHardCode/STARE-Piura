@@ -20,7 +20,7 @@ class StoreDonorRequest extends FormRequest
             'telefono' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:255',
             'distrito' => 'nullable|string|max:100',
-            'mype_id' => 'nullable|string|exists:mypes,id',
+            'mype_id' => 'nullable|string|max:50',
         ];
     }
 }

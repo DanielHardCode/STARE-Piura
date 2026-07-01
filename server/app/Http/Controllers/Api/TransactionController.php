@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreTransactionRequest;
-use App\Models\Transaction;
+use App\Services\SupabaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -12,35 +12,54 @@ class TransactionController extends Controller
 {
     use ApiResponse;
 
-    public function index()
+    public function __construct(
+        protected SupabaseService $supabase,
+    ) {}
+
+    public function index(Request $request)
     {
-        $transactions = Transaction::orderBy('created_at', 'desc')->get();
-        return $this->success($transactions);
+        $response = $this->supabase
+            ->withToken($request->bearerToken())
+            ->get('transactions', 'select=*&order=created_at.desc');
+
+        return $this->success($response->json(), $response->status());
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        $transaction = Transaction::find($id);
-        if (!$transaction) {
+        $response = $this->supabase
+            ->withToken($request->bearerToken())
+            ->find('transactions', $id);
+
+        $data = $response->json();
+
+        if (empty($data)) {
             return $this->error('Transacción no encontrada', 404);
         }
-        return $this->success($transaction);
+
+        return $this->success($data[0]);
     }
 
     public function store(StoreTransactionRequest $request)
     {
-        $transaction = Transaction::create([
-            'id' => (string) Str::uuid(),
-            ...$request->validated(),
-        ]);
+        $response = $this->supabase
+            ->withToken($request->bearerToken())
+            ->withRepresentation()
+            ->create('transactions', [
+                'id' => (string) Str::uuid(),
+                ...$request->validated(),
+            ]);
 
-        return $this->created($transaction);
+        return $this->created($response->json());
     }
 
     public function update(Request $request, string $id)
     {
-        $transaction = Transaction::find($id);
-        if (!$transaction) {
+        $check = $this->supabase
+            ->withToken($request->bearerToken())
+            ->find('transactions', $id);
+
+        if (empty($check->json())) {
             return $this->error('Transacción no encontrada', 404);
         }
 
@@ -53,29 +72,43 @@ class TransactionController extends Controller
             'donation_id' => 'nullable|string|max:50',
         ]);
 
-        $transaction->update($validated);
-        return $this->success($transaction->fresh());
+        $response = $this->supabase
+            ->withToken($request->bearerToken())
+            ->withRepresentation()
+            ->update('transactions', $id, $validated);
+
+        return $this->success($response->json()[0] ?? $check->json()[0]);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        $transaction = Transaction::find($id);
-        if (!$transaction) {
+        $response = $this->supabase
+            ->withToken($request->bearerToken())
+            ->withRepresentation()
+            ->delete('transactions', $id);
+
+        if (empty($response->json())) {
             return $this->error('Transacción no encontrada', 404);
         }
-        $transaction->delete();
+
         return $this->noContent();
     }
 
-    public function getBalances()
+    public function getBalances(Request $request)
     {
-        $cajaChica = Transaction::where('fondo', 'caja_chica')
-            ->get()
-            ->sum(fn ($t) => $t->tipo === 'ingreso' ? $t->monto : -$t->monto);
+        $transactions = $this->supabase
+            ->withToken($request->bearerToken())
+            ->get('transactions', 'select=tipo,monto,fondo');
 
-        $fondoAdquisicion = Transaction::where('fondo', 'fondo_adquisicion')
-            ->get()
-            ->sum(fn ($t) => $t->tipo === 'ingreso' ? $t->monto : -$t->monto);
+        $all = $transactions->json();
+
+        $cajaChica = collect($all)
+            ->where('fondo', 'caja_chica')
+            ->sum(fn ($t) => $t['tipo'] === 'ingreso' ? $t['monto'] : -$t['monto']);
+
+        $fondoAdquisicion = collect($all)
+            ->where('fondo', 'fondo_adquisicion')
+            ->sum(fn ($t) => $t['tipo'] === 'ingreso' ? $t['monto'] : -$t['monto']);
 
         return $this->success([
             'caja_chica' => max(0, $cajaChica),

@@ -14,7 +14,7 @@ class StoreDonationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'donor_id' => 'required|string|exists:donors,id',
+            'donor_id' => 'required|string|max:50',
             'donor_nombre' => 'required|string|max:255',
             'tipo' => 'required|string|in:monetaria,especie',
             'medio_pago' => 'nullable|string|in:yape,plin,efectivo,transferencia,especie',
@@ -25,7 +25,7 @@ class StoreDonationRequest extends FormRequest
             'items.*.unidad' => 'nullable|string',
             'descripcion' => 'nullable|string',
             'fondo_destino' => 'nullable|string|in:caja_chica,fondo_adquisicion',
-            'event_id' => 'nullable|string|exists:events,id',
+            'event_id' => 'nullable|string|max:50',
             'comprobante_url' => 'nullable|string',
             'fecha' => 'required|date',
         ];
