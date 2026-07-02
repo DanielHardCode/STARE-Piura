@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\MypeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrganizationController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SupplyItemController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -34,17 +35,22 @@ Route::middleware('auth.supabase')->group(function () {
         Route::apiResource('donations', DonationController::class);
         Route::apiResource('events', EventController::class);
         Route::apiResource('supply-items', SupplyItemController::class)->parameters(['supply-items' => 'supplyItem']);
+        Route::apiResource('supply-bags', \App\Http\Controllers\Api\SupplyBagController::class)->parameters(['supply-bags' => 'supplyBag']);
         Route::apiResource('transactions', TransactionController::class);
         Route::apiResource('notifications', NotificationController::class);
-    });
 
-    // ─── Rutas adicionales ─────────────────────────────────────────
-    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        // ─── Rutas adicionales del módulo financiero y logístico ────
+        Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/supply-items/{id}/cubrir', [SupplyItemController::class, 'cubrir']);
+    });
 
     // ─── Rutas exclusivas para admin ────────────────────────────────
     Route::middleware('role:admin')->group(function () {
         Route::get('/balances', [TransactionController::class, 'getBalances']);
+        Route::get('/users', [ProfileController::class, 'index']);
+        Route::get('/users/{id}', [ProfileController::class, 'show']);
+        Route::put('/users/{id}', [ProfileController::class, 'update']);
     });
 
 });

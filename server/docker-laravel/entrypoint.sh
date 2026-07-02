@@ -22,7 +22,7 @@ php artisan view:cache
 
 # Migraciones solo en desarrollo local (SQLite)
 # En producción (Render) no hay base de datos — todo va vía API REST de Supabase.
-if [ "$RUN_MIGRATIONS" = "true" ] && [ -f storage/app/database.sqlite ]; then
+if [ "$RUN_MIGRATIONS" = "true" ] && [ -f database/database.sqlite ]; then
     echo "Ejecutando migraciones de base de datos (desarrollo)..."
     php artisan migrate --force
 fi

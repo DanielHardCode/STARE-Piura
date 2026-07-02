@@ -92,7 +92,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
           </div>
           <h4 className="text-xs font-sans font-medium text-slate-500">Rutas locales y combustibles</h4>
           <h2 className="text-2xl font-sans font-bold text-slate-900 mt-1 tracking-tight">
-            S/. {balances.cajaChica.toFixed(2)}
+            S/. {(balances?.cajaChica ?? 0).toFixed(2)}
           </h2>
           <p className="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5 font-sans leading-relaxed">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -128,7 +128,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
           </div>
           <h4 className="text-xs font-sans font-medium text-slate-500">Balanceador de Bolsas</h4>
           <h2 className="text-2xl font-sans font-bold text-slate-900 mt-1 tracking-tight">
-            S/. {balances.fondoAdquisicion.toFixed(2)}
+            S/. {(balances?.fondoAdquisicion ?? 0).toFixed(2)}
           </h2>
           <p className="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5 font-sans leading-relaxed">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-indigo-500" />
@@ -169,7 +169,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
           <h4 className="text-[11px] font-sans text-slate-400">Últimas 3 transacciones:</h4>
           
           <div className="mt-3 space-y-2.5">
-            {movements.slice(0, 3).map((mov) => (
+            {(movements || []).slice(0, 3).map((mov) => (
               <div key={mov.id} className="flex items-start justify-between border-b border-slate-800/80 pb-2 last:border-0 last:pb-0">
                 <div className="min-w-0 pr-2">
                   <p className="text-xs font-sans font-semibold text-slate-200 truncate" title={mov.description}>
@@ -197,7 +197,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
             onClick={() => setShowHistoryModal(true)}
             className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[11px] font-sans font-bold py-2 px-3 rounded-xl border border-slate-700 text-center transition-colors cursor-pointer"
           >
-            Ver Historial Completo ({movements.length})
+            Ver Historial Completo ({(movements || []).length})
           </button>
         </div>
       </motion.div>
@@ -369,7 +369,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
                   Historial consolidad de caja local. Los egresos en el Módulo de Adquisición ocurren al balancear las existencias pendientes de las bolsas.
                 </p>
 
-                {movements.length === 0 ? (
+                {(movements || []).length === 0 ? (
                   <div className="text-center py-8 text-slate-450 text-slate-400">
                     No se registran movimientos aún.
                   </div>

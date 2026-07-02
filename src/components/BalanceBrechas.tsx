@@ -46,8 +46,8 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
   const { events: hookEvents, selectedEventId: hookSelectedId, setSelectedEventId: hookSelectEvent, directBuyItem: hookDirectBuy } = useEvents();
   const { balances: hookBalances } = useFinance();
 
-  const events = propEvents || hookEvents;
-  const balances = propBalances || hookBalances;
+  const events = propEvents || hookEvents || [];
+  const balances = { cajaChica: 0, fondoAdquisicion: 0, ...(propBalances || hookBalances) };
   const selectedEventId = propSelectedEventId !== undefined ? propSelectedEventId : hookSelectedId;
   const onSelectEvent = propOnSelectEvent || hookSelectEvent;
 
@@ -92,7 +92,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
 
     const totalCost = deficit * selectedItem.unitPriceEstimate;
 
-    if (totalCost > balances.fondoAdquisicion) {
+    if (totalCost > (balances?.fondoAdquisicion ?? 0)) {
       alert('¡Fondo de Adquisición Insuficiente! Por favor, registre un aporte económico con Yape/Plin o Caja Chica antes de continuar.');
       return;
     }
@@ -106,7 +106,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
       selectedItem.name
     );
 
-    setActionSuccess(`¡Gasto autorizado con éxito! Se han restado S/. ${totalCost.toFixed(2)} del Fondo de Adquisición Directa para adquirir ${deficit} ${selectedItem.unit} de ${selectedItem.name}.`);
+    setActionSuccess(`¡Gasto autorizado con éxito! Se han restado S/. ${(totalCost ?? 0).toFixed(2)} del Fondo de Adquisición Directa para adquirir ${deficit} ${selectedItem.unit} de ${selectedItem.name}.`);
     setSelectedItemId(null);
 
     setTimeout(() => {
@@ -155,7 +155,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                 onChange={(e) => handleEventChange(e.target.value)}
                 className="w-full text-sm font-sans font-black bg-slate-800 text-amber-300 border border-slate-700 rounded-xl px-4 py-2.5 outline-hidden focus:border-amber-400"
               >
-                {events.map((evt) => (
+                {events?.map((evt) => (
                   <option key={evt.id} value={evt.id}>
                     🗓️ {evt.district} — {evt.title} ({evt.date})
                   </option>
@@ -205,7 +205,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                   Caja Chica Logística
                 </span>
                 <span className="text-xl font-sans font-black text-white block mt-1 tracking-tight">
-                  S/. {balances.cajaChica.toFixed(2)}
+                  S/. {(balances?.cajaChica ?? 0).toFixed(2)}
                 </span>
               </div>
               <p className="text-[9px] text-slate-400 leading-normal mt-3 bg-slate-800/40 p-1.5 rounded border border-slate-800">
@@ -223,7 +223,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                   Adquisición Directa
                 </span>
                 <span className="text-xl font-sans font-black text-amber-400 block mt-1 tracking-tight">
-                  S/. {balances.fondoAdquisicion.toFixed(2)}
+                  S/. {(balances?.fondoAdquisicion ?? 0).toFixed(2)}
                 </span>
               </div>
               <p className="text-[9px] text-slate-400 leading-normal mt-3 bg-slate-800/40 p-1.5 rounded border border-slate-800">
@@ -241,7 +241,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
             <div className="flex items-center gap-2 text-slate-350">
               <Scale className="w-4 h-4 text-amber-400" />
               <p className="font-sans">
-                Cobertura de Canasta: {selectedEvent.title} está cubierto al <strong className="text-white text-sm">{eventCoveragePct.toFixed(1)}%</strong>
+                Cobertura de Canasta: {selectedEvent.title} está cubierto al <strong className="text-white text-sm">{(eventCoveragePct ?? 0).toFixed(1)}%</strong>
               </p>
             </div>
             <div className="w-full sm:w-72 h-2.5 bg-slate-700 rounded-full overflow-hidden border border-slate-900 pb-0.5">
@@ -325,7 +325,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                             {item.name}
                           </p>
                           <p className="text-[10px] text-slate-400 font-mono">
-                            Costo Ref: S/. {item.unitPriceEstimate.toFixed(2)} por {item.unit}
+                            Costo Ref: S/. {(item.unitPriceEstimate ?? 0).toFixed(2)} por {item.unit}
                           </p>
                         </div>
                       </td>
@@ -346,7 +346,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                       <td className="py-3 px-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <span className="font-mono text-[10px] font-bold text-slate-500 shrink-0">
-                            {percentCollected.toFixed(0)}%
+                            {(percentCollected ?? 0).toFixed(0)}%
                           </span>
                           <div className="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
                             <div 
@@ -441,14 +441,14 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-indigo-200">Costo Local Unitario (Piura):</span>
                       <span className="font-mono text-white">
-                        S/. {selectedItem.unitPriceEstimate.toFixed(2)}
+                        S/. {(selectedItem?.unitPriceEstimate ?? 0).toFixed(2)}
                       </span>
                     </div>
 
                     <div className="border-t border-dashed border-indigo-750 pt-2 flex items-center justify-between text-sm font-bold">
                       <span className="text-white">Costo Total Compra:</span>
                       <span className="font-mono font-black text-amber-350 text-white leading-none text-base">
-                        S/. {((selectedItem.targetQty - selectedItem.currentQty) * selectedItem.unitPriceEstimate).toFixed(2)}
+                        S/. {(((selectedItem?.targetQty ?? 0) - (selectedItem?.currentQty ?? 0)) * (selectedItem?.unitPriceEstimate ?? 0)).toFixed(2)}
                       </span>
                     </div>
 
@@ -458,14 +458,14 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                   <div className="space-y-2 text-[11px] font-sans">
                     <div className="flex items-center justify-between">
                       <span className="text-indigo-200">Fondo Adquisición Disponible:</span>
-                      <span className={`font-mono font-bold ${balances.fondoAdquisicion >= ((selectedItem.targetQty - selectedItem.currentQty) * selectedItem.unitPriceEstimate) ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        S/. {balances.fondoAdquisicion.toFixed(2)}
+                      <span className={`font-mono font-bold ${(balances?.fondoAdquisicion ?? 0) >= (((selectedItem?.targetQty ?? 0) - (selectedItem?.currentQty ?? 0)) * (selectedItem?.unitPriceEstimate ?? 0)) ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        S/. {(balances?.fondoAdquisicion ?? 0).toFixed(2)}
                       </span>
                     </div>
                   </div>
 
                   {/* Error check or CTA */}
-                  {balances.fondoAdquisicion < ((selectedItem.targetQty - selectedItem.currentQty) * selectedItem.unitPriceEstimate) ? (
+                  {(balances?.fondoAdquisicion ?? 0) < (((selectedItem?.targetQty ?? 0) - (selectedItem?.currentQty ?? 0)) * (selectedItem?.unitPriceEstimate ?? 0)) ? (
                     <div className="p-3 bg-rose-950/50 border border-rose-900/50 text-rose-200 rounded-xl flex items-start gap-1.5 leading-relaxed text-[10px]">
                       <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                       <p>
@@ -475,7 +475,7 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                   ) : (
                     <div className="p-2.5 bg-emerald-950/40 border border-emerald-900/40 text-emerald-250 rounded-xl flex items-center gap-1.5 text-[10px] text-emerald-200">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>Saldo suficiente. El costo se debitará en S/. {((selectedItem.targetQty - selectedItem.currentQty) * selectedItem.unitPriceEstimate).toFixed(2)}</span>
+                      <span>Saldo suficiente. El costo se debitará en S/. {(((selectedItem?.targetQty ?? 0) - (selectedItem?.currentQty ?? 0)) * (selectedItem?.unitPriceEstimate ?? 0)).toFixed(2)}</span>
                     </div>
                   )}
 
@@ -483,9 +483,9 @@ export const BalanceBrechas: React.FC<BalanceBrechasProps> = ({
                   <button
                     type="button"
                     onClick={handleAuthorizedPurchase}
-                    disabled={balances.fondoAdquisicion < ((selectedItem.targetQty - selectedItem.currentQty) * selectedItem.unitPriceEstimate)}
+                    disabled={(balances?.fondoAdquisicion ?? 0) < (((selectedItem?.targetQty ?? 0) - (selectedItem?.currentQty ?? 0)) * (selectedItem?.unitPriceEstimate ?? 0))}
                     className={`w-full font-sans font-black py-3 px-4 rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-md ${
-                      balances.fondoAdquisicion >= ((selectedItem.targetQty - selectedItem.currentQty) * selectedItem.unitPriceEstimate)
+                      (balances?.fondoAdquisicion ?? 0) >= (((selectedItem?.targetQty ?? 0) - (selectedItem?.currentQty ?? 0)) * (selectedItem?.unitPriceEstimate ?? 0))
                         ? 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-inner'
                         : 'bg-indigo-900 text-indigo-400 cursor-not-allowed border border-indigo-850/40'
                     }`}
