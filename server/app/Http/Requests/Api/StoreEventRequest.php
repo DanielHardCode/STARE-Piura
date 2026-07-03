@@ -14,7 +14,7 @@ class StoreEventRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'organization_id' => 'nullable|string|exists:organizations,id',
+            'organization_id' => 'nullable|string|max:50',
             'organization_nombre' => 'nullable|string|max:255',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

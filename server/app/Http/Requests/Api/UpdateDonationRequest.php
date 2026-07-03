@@ -16,7 +16,7 @@ class UpdateDonationRequest extends FormRequest
         return [
             'descripcion' => 'sometimes|string',
             'comprobante_url' => 'nullable|string',
-            'event_id' => 'nullable|string|exists:events,id',
+            'event_id' => 'nullable|string|max:50',
         ];
     }
 }

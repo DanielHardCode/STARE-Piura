@@ -19,7 +19,7 @@ class StoreTransactionRequest extends FormRequest
             'monto' => 'required|numeric|min:0',
             'fondo' => 'required|string|in:caja_chica,fondo_adquisicion',
             'fecha' => 'required|date',
-            'donation_id' => 'nullable|string|exists:donations,id',
+            'donation_id' => 'nullable|string|max:50',
         ];
     }
 }

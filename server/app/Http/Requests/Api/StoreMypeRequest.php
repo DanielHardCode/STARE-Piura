@@ -15,7 +15,7 @@ class StoreMypeRequest extends FormRequest
     {
         return [
             'razon_social' => 'required|string|max:255',
-            'ruc' => 'required|string|max:20|unique:mypes,ruc',
+            'ruc' => 'required|string|max:20',
             'rubro' => 'required|string|in:Bodega,Panadería,Farmacia,Restaurant,Ferretería,Librería,Textil,Otro',
             'contacto' => 'required|string|max:255',
             'telefono' => 'required|string|max:50',

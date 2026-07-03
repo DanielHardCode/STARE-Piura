@@ -15,7 +15,7 @@ class UpdateMypeRequest extends FormRequest
     {
         return [
             'razon_social' => 'sometimes|string|max:255',
-            'ruc' => 'sometimes|string|max:20|unique:mypes,ruc,' . $this->route('id'),
+            'ruc' => 'sometimes|string|max:20',
             'rubro' => 'sometimes|string|in:Bodega,Panadería,Farmacia,Restaurant,Ferretería,Librería,Textil,Otro',
             'contacto' => 'sometimes|string|max:255',
             'telefono' => 'sometimes|string|max:50',
