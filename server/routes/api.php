@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\MypeController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\EvidenceController;
 use App\Http\Controllers\Api\SupplyItemController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
@@ -50,7 +51,18 @@ Route::middleware('auth.supabase')->group(function () {
         Route::get('/balances', [TransactionController::class, 'getBalances']);
         Route::get('/users', [ProfileController::class, 'index']);
         Route::get('/users/{id}', [ProfileController::class, 'show']);
+        Route::post('/users/register', [ProfileController::class, 'register']);
         Route::put('/users/{id}', [ProfileController::class, 'update']);
+    });
+
+    // ─── Rutas de evidencias de visitas de campo ────────────────────
+    Route::middleware('role:admin,coordinador')->group(function () {
+        Route::get('/events/{eventId}/evidences', [EvidenceController::class, 'index']);
+    });
+
+    Route::middleware('role:voluntario')->group(function () {
+        Route::post('/events/{eventId}/evidences', [EvidenceController::class, 'store']);
+        Route::put('/events/{eventId}/complete', [EvidenceController::class, 'complete']);
     });
 
 });

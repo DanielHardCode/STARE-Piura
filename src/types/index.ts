@@ -304,6 +304,19 @@ export interface CreateSupplyItemDTO {
 
 export type UpdateSupplyItemDTO = Partial<Pick<SupplyItem, 'cantidad_cubierta' | 'cantidad_requerida' | 'precio_unitario_estimado'>>;
 
+// ─── VisitEvidence (Evidencias de Visitas de Campo) ──────────────────────────
+
+export type EvidenceTipo = 'foto_canasta' | 'foto_evidencia' | 'firma';
+
+export interface VisitEvidence {
+  id: string;
+  event_id: string;
+  tipo: EvidenceTipo;
+  url: string;
+  descripcion?: string;
+  created_at: string;
+}
+
 // ─── Notification ─────────────────────────────────────────────────────────────
 
 export type NotificationType =

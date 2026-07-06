@@ -111,7 +111,7 @@ export const UserForm: React.FC<UserFormProps> = ({
             >
               <option value="voluntario">Voluntario</option>
               <option value="coordinador">Coordinador</option>
-              <option value="admin">Administrador</option>
+              {isEditing && <option value="admin">Administrador</option>}
             </select>
           </div>
 
