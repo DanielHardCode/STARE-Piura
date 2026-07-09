@@ -208,6 +208,70 @@ textarea:focus-visible {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Animaciones Canvas / Premium ───────────────────────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px);    }
+  50%       { transform: translateY(-10px);  }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg);   }
+  33%       { transform: translateY(-8px) rotate(1deg);  }
+  66%       { transform: translateY(-4px) rotate(-1deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0);    opacity: 1; }
+  50%       { box-shadow: 0 0 24px 6px rgba(13, 148, 136, 0.35); opacity: 0.92; }
+}
+
+@keyframes glow-pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);    }
+  50%       { box-shadow: 0 0 20px 4px rgba(245, 158, 11, 0.3); }
+}
+
+@keyframes shimmer-sweep {
+  0%   { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(250%) skewX(-12deg);  }
+}
+
+@keyframes spin-orbit {
+  from { transform: rotate(0deg) translateX(28px) rotate(0deg);   }
+  to   { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
+}
+
+@keyframes border-flow {
+  0%   { background-position: 0% 50%;   }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%;   }
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-16px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes reveal-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes data-blink {
+  0%, 100% { opacity: 1;   }
+  45%, 55% { opacity: 0.2; }
+}
+
+@keyframes typing-cursor {
+  0%, 100% { border-right-color: rgba(13, 148, 136, 0.9); }
+  50%       { border-right-color: transparent;              }
+}
+
 /* ─── Utility Classes ─────────────────────────────────────────────────────────── */
 
 /* Glassmorphism */
@@ -257,6 +321,114 @@ textarea:focus-visible {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
 }
+
+/* ─── Canvas Overlay ─────────────────────────────────────────────────────────── */
+
+/* Posiciona un canvas como fondo absoluto sin interferir con contenido */
+.canvas-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Posiciona un canvas que sí captura eventos de mouse (para efectos interactivos) */
+.canvas-interactive {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  cursor: default;
+}
+
+/* ─── Animation Utilities ─────────────────────────────────────────────────────── */
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
+.animate-glow-amber {
+  animation: glow-pulse-amber 2.5s ease-in-out infinite;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.35s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.animate-reveal-up {
+  animation: reveal-up 0.5s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+/* Shimmer-sweep sobre un botón o badge (requiere overflow:hidden en padre) */
+.shimmer-sweep-effect {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-sweep-effect::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%) skewX(-12deg);
+  animation: none;
+  transition: none;
+}
+.shimmer-sweep-effect:hover::after {
+  animation: shimmer-sweep 0.65s ease-out forwards;
+}
+
+/* Orbit ring decorativo (colocado sobre el logo) */
+.orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(13, 148, 136, 0.3);
+  animation: spin-slow 12s linear infinite;
+  pointer-events: none;
+}
+
+/* Cursor de escritura (typing effect) */
+.typing-cursor {
+  border-right: 2px solid rgba(13, 148, 136, 0.9);
+  animation: typing-cursor 0.8s step-end infinite;
+  padding-right: 2px;
+}
+
+/* Blink de datos en el panel terminal */
+.data-blink {
+  animation: data-blink 2s ease-in-out infinite;
+}
+
+/* Reveal escalonado — aplica delays desde el padre */
+.stagger-reveal > * {
+  opacity: 0;
+  animation: reveal-up 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.stagger-reveal > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-reveal > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger-reveal > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger-reveal > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger-reveal > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger-reveal > *:nth-child(6) { animation-delay: 0.40s; }
 
 /* ─── Responsive sidebar offset ──────────────────────────────────────────────── */
 .layout-with-sidebar {

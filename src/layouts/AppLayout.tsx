@@ -250,19 +250,22 @@ export function AppLayout({
 
           {/* Page title */}
           <div className="flex-1 min-w-0">
-            <motion.div
-              key={activeScreen}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <h1 className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] truncate leading-snug">
-                {screenTitles[activeScreen]}
-              </h1>
-              <p className="text-xs text-[var(--color-text-tertiary)] truncate hidden sm:block">
-                {screenSubtitles[activeScreen]}
-              </p>
-            </motion.div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={activeScreen}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+              >
+                <h1 className="text-base sm:text-lg font-bold text-[var(--color-text-primary)] truncate leading-snug">
+                  {screenTitles[activeScreen]}
+                </h1>
+                <p className="text-xs text-[var(--color-text-tertiary)] truncate hidden sm:block">
+                  {screenSubtitles[activeScreen]}
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Right actions */}
@@ -341,6 +344,7 @@ export function AppLayout({
               initial="initial"
               animate="animate"
               exit="exit"
+              style={{ willChange: 'opacity, transform' }}
             >
               {children}
             </motion.div>
