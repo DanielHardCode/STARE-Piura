@@ -1,54 +1,70 @@
+/**
+ * @file src/repositories/supabase_laravel/organization.ts
+ * @description Repositorio de Organizaciones para el provider `supabase_laravel`.
+ * Todas las operaciones se delegan al backend Laravel mediante `apiFetch<T>`,
+ * que inyecta automáticamente el JWT de Supabase Auth.
+ *
+ * Endpoints cubiertos:
+ *  - GET    /api/organizations
+ *  - GET    /api/organizations/{id}
+ *  - POST   /api/organizations
+ *  - PUT    /api/organizations/{id}
+ *  - DELETE /api/organizations/{id}
+ */
+
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api-client';
 import type { IOrganizationRepository } from '../contracts/organization';
 import type { Organization, CreateOrganizationDTO, UpdateOrganizationDTO } from '@/types/index';
-import { supabase } from '@/lib/supabase';
-import { laravelApi } from '@/lib/laravel';
 
 export class SupabaseLaravelOrganizationRepository implements IOrganizationRepository {
-  private get client() {
-    if (!supabase) {
-      throw new Error('Supabase no está inicializado. Verifique VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.');
-    }
-    return supabase;
-  }
-
+  /**
+   * Obtiene la lista completa de organizaciones.
+   * @returns Array de organizaciones ordenado por nombre (backend).
+   */
   async getAll(): Promise<Organization[]> {
-    const { data, error } = await this.client
-      .from('organizations')
-      .select('*')
-      .order('nombre', { ascending: true });
-
-    if (error) {
-      throw new Error(`Error al obtener organizaciones de Supabase: ${error.message}`);
-    }
-
-    return (data || []) as Organization[];
+    return apiGet<Organization[]>('/api/organizations');
   }
 
+  /**
+   * Obtiene una organización por su ID.
+   * @param id UUID de la organización.
+   * @returns La organización o `null` si no existe (404).
+   */
   async getById(id: string): Promise<Organization | null> {
-    const { data, error } = await this.client
-      .from('organizations')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null; // No rows found
-      throw new Error(`Error al obtener organización de Supabase: ${error.message}`);
+    try {
+      return await apiGet<Organization>(`/api/organizations/${id}`);
+    } catch (err: unknown) {
+      if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
+        return null;
+      }
+      throw err;
     }
-
-    return data as Organization;
   }
 
+  /**
+   * Crea una nueva organización.
+   * @param dto Datos de la organización a crear.
+   * @returns La organización creada con ID y timestamps asignados por el servidor.
+   */
   async create(dto: CreateOrganizationDTO): Promise<Organization> {
-    // Las operaciones de escritura pasan por la API Laravel para validaciones y lógica de negocio
-    return laravelApi.post<Organization>('/organizations', dto);
+    return apiPost<Organization>('/api/organizations', dto);
   }
 
+  /**
+   * Actualiza parcialmente una organización existente.
+   * @param id  UUID de la organización.
+   * @param dto Campos a actualizar (PATCH semántico, enviado como PUT).
+   * @returns La organización con los datos actualizados.
+   */
   async update(id: string, dto: UpdateOrganizationDTO): Promise<Organization> {
-    return laravelApi.put<Organization>(`/organizations/${id}`, dto);
+    return apiPut<Organization>(`/api/organizations/${id}`, dto);
   }
 
+  /**
+   * Elimina una organización.
+   * @param id UUID de la organización a eliminar.
+   */
   async delete(id: string): Promise<void> {
-    await laravelApi.delete(`/organizations/${id}`);
+    await apiDelete(`/api/organizations/${id}`);
   }
 }

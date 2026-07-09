@@ -1,5 +1,5 @@
 import type { IEventRepository } from '../contracts/event';
-import type { Event, CreateEventDTO, UpdateEventDTO, SupplyItem, CreateSupplyItemDTO, UpdateSupplyItemDTO } from '@/types/index';
+import type { Event, CreateEventDTO, UpdateEventDTO, SupplyItem, CreateSupplyItemDTO, UpdateSupplyItemDTO, CoverSupplyItemDTO } from '@/types/index';
 import { MOCK_EVENTS, MOCK_SUPPLY_ITEMS } from '@/mocks';
 import { delay } from './utils';
 
@@ -93,6 +93,51 @@ export class MockEventRepository implements IEventRepository {
     const updated: SupplyItem = {
       ...current,
       ...dto,
+    };
+    MockEventRepository.supplyItems[idx] = updated;
+    return { ...updated };
+  }
+
+  async deleteSupplyItem(itemId: string): Promise<void> {
+    await delay();
+    const idx = MockEventRepository.supplyItems.findIndex((x) => x.id === itemId);
+    if (idx === -1) {
+      throw new Error(`Ítem de bolsa con id ${itemId} no encontrado`);
+    }
+    MockEventRepository.supplyItems.splice(idx, 1);
+  }
+
+  async delete(id: string): Promise<void> {
+    await delay();
+    const idx = MockEventRepository.items.findIndex((x) => x.id === id);
+    if (idx === -1) {
+      throw new Error(`Evento con id ${id} no encontrado`);
+    }
+    MockEventRepository.items.splice(idx, 1);
+    // Eliminar los supply items asociados al evento
+    MockEventRepository.supplyItems = MockEventRepository.supplyItems.filter(
+      (x) => x.event_id !== id
+    );
+  }
+
+  /**
+   * RPC mock: cubre la cantidad indicada de un ítem de suministros.
+   */
+  async coverSupplyItem(dto: CoverSupplyItemDTO): Promise<SupplyItem> {
+    await delay();
+    const idx = MockEventRepository.supplyItems.findIndex(
+      (x) => x.id === dto.supply_item_id
+    );
+    if (idx === -1) {
+      throw new Error(`Ítem de bolsa con id ${dto.supply_item_id} no encontrado`);
+    }
+    const current = MockEventRepository.supplyItems[idx];
+    const updated: SupplyItem = {
+      ...current,
+      cantidad_cubierta: Math.min(
+        current.cantidad_requerida,
+        current.cantidad_cubierta + dto.cantidad_a_cubrir
+      ),
     };
     MockEventRepository.supplyItems[idx] = updated;
     return { ...updated };

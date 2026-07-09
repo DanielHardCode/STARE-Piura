@@ -1,5 +1,5 @@
 import type { IDonorRepository } from '../contracts/donor';
-import type { Donor, CreateDonorDTO } from '@/types/index';
+import type { Donor, CreateDonorDTO, UpdateDonorDTO } from '@/types/index';
 import { MOCK_DONORS } from '@/mocks';
 import { delay } from './utils';
 
@@ -33,5 +33,16 @@ export class MockDonorRepository implements IDonorRepository {
     };
     MockDonorRepository.items.push(newItem);
     return { ...newItem };
+  }
+
+  async update(id: string, dto: UpdateDonorDTO): Promise<Donor> {
+    await delay();
+    const idx = MockDonorRepository.items.findIndex((x) => x.id === id);
+    if (idx === -1) {
+      throw new Error(`Donante con id ${id} no encontrado`);
+    }
+    const updated: Donor = { ...MockDonorRepository.items[idx], ...dto };
+    MockDonorRepository.items[idx] = updated;
+    return { ...updated };
   }
 }

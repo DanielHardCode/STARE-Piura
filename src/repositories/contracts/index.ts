@@ -5,3 +5,6 @@ export * from './donation';
 export * from './event';
 export * from './transaction';
 export * from './notification';
+export * from './supply-bag';
+export * from './user';
+export * from './field-visit';

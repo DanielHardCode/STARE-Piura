@@ -170,6 +170,8 @@ export interface CreateDonorDTO {
   mype_id?: string;
 }
 
+export type UpdateDonorDTO = Partial<CreateDonorDTO>;
+
 // ─── Donation (Donaciones) ────────────────────────────────────────────────────
 
 export interface DonationItem {
@@ -283,6 +285,8 @@ export type SupplyCategory = 'viveres' | 'medicina' | 'abrigo' | 'limpieza' | 'e
 export interface SupplyItem {
   id: string;
   event_id: string;
+  /** Bolsa de suministros a la que pertenece el ítem (opcional). */
+  supply_bag_id?: string;
   nombre: string;
   categoria: SupplyCategory;
   unidad: string;
@@ -294,6 +298,7 @@ export interface SupplyItem {
 
 export interface CreateSupplyItemDTO {
   event_id: string;
+  supply_bag_id?: string;
   nombre: string;
   categoria: SupplyCategory;
   unidad: string;
@@ -304,6 +309,7 @@ export interface CreateSupplyItemDTO {
 
 export type UpdateSupplyItemDTO = Partial<Pick<SupplyItem, 'cantidad_cubierta' | 'cantidad_requerida' | 'precio_unitario_estimado'>>;
 
+<<<<<<< Updated upstream
 // ─── VisitEvidence (Evidencias de Visitas de Campo) ──────────────────────────
 
 export type EvidenceTipo = 'foto_canasta' | 'foto_evidencia' | 'firma';
@@ -317,6 +323,41 @@ export interface VisitEvidence {
   created_at: string;
 }
 
+=======
+/**
+ * DTO para el RPC `POST /api/supply-items/cubrir`.
+ * Cubre (o incrementa la cobertura de) un ítem de suministros.
+ */
+export interface CoverSupplyItemDTO {
+  supply_item_id: string;
+  cantidad_a_cubrir: number;
+  /** Identificador del donante o MYPE que cubre el ítem (opcional). */
+  donor_id?: string;
+}
+
+// ─── SupplyBag (Bolsas de Suministros) ────────────────────────────────────────
+
+export type SupplyBagStatus = 'pendiente' | 'parcial' | 'completa';
+
+export interface SupplyBag {
+  id: string;
+  event_id: string;
+  nombre: string;
+  descripcion?: string;
+  status: SupplyBagStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSupplyBagDTO {
+  event_id: string;
+  nombre: string;
+  descripcion?: string;
+}
+
+export type UpdateSupplyBagDTO = Partial<Pick<SupplyBag, 'nombre' | 'descripcion' | 'status'>>;
+
+>>>>>>> Stashed changes
 // ─── Notification ─────────────────────────────────────────────────────────────
 
 export type NotificationType =
@@ -336,6 +377,57 @@ export interface Notification {
   read: boolean;
   data?: Record<string, string | number | boolean>;  // payload extra (event_id, donation_id, etc.)
   created_at: string;
+}
+
+// ─── Evidence (Evidencias de Visita de Campo) ────────────────────────────────
+
+export type EvidenceType = 'foto' | 'video' | 'documento';
+
+export interface Evidence {
+  id: string;
+  event_id: string;
+  /** Voluntario que subió la evidencia. */
+  user_id: string;
+  tipo: EvidenceType;
+  /** URL pública en Supabase Storage (ya subida antes de llamar al endpoint). */
+  url: string;
+  descripcion?: string;
+  created_at: string;
+}
+
+export interface CreateEvidenceDTO {
+  tipo: EvidenceType;
+  /** URL pública obtenida tras subir el archivo a Supabase Storage. */
+  url: string;
+  descripcion?: string;
+}
+
+/**
+ * DTO para `PUT /api/events/{id}/complete`.
+ * El frontend ya realizó la subida de los blobs a Supabase Storage
+ * y pasa las URLs públicas resultantes en este DTO.
+ */
+export interface CompleteEventDTO {
+  /** URLs públicas de los archivos de evidencia subidos al Storage. */
+  evidencia_urls: string[];
+  notas_cierre?: string;
+}
+
+// ─── User Management (Gestión de Usuarios — Rol Admin) ────────────────────────
+
+export interface RegisterUserDTO {
+  email: string;
+  password: string;
+  nombre: string;
+  role: UserRole;
+  telefono?: string;
+}
+
+export interface UpdateUserDTO {
+  nombre?: string;
+  role?: UserRole;
+  telefono?: string;
+  activo?: boolean;
 }
 
 // ─── Aggregated / Computed Types ──────────────────────────────────────────────

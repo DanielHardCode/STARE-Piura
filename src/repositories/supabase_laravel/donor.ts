@@ -1,45 +1,56 @@
+/**
+ * @file src/repositories/supabase_laravel/donor.ts
+ * @description Repositorio de Donantes para el provider `supabase_laravel`.
+ *
+ * Endpoints cubiertos:
+ *  - GET  /api/donors
+ *  - POST /api/donors
+ *  - PUT  /api/donors/{id}
+ */
+
+import { apiGet, apiPost, apiPut } from '@/lib/api-client';
 import type { IDonorRepository } from '../contracts/donor';
-import type { Donor, CreateDonorDTO } from '@/types/index';
-import { supabase } from '@/lib/supabase';
-import { laravelApi } from '@/lib/laravel';
+import type { Donor, CreateDonorDTO, UpdateDonorDTO } from '@/types/index';
 
 export class SupabaseLaravelDonorRepository implements IDonorRepository {
-  private get client() {
-    if (!supabase) {
-      throw new Error('Supabase no está inicializado.');
-    }
-    return supabase;
-  }
-
+  /**
+   * Obtiene la lista completa de donantes.
+   */
   async getAll(): Promise<Donor[]> {
-    const { data, error } = await this.client
-      .from('donors')
-      .select('*')
-      .order('nombres', { ascending: true });
-
-    if (error) {
-      throw new Error(`Error al obtener donantes de Supabase: ${error.message}`);
-    }
-
-    return (data || []) as Donor[];
+    return apiGet<Donor[]>('/api/donors');
   }
 
+  /**
+   * Obtiene un donante por su ID.
+   * @param id UUID del donante.
+   * @returns El donante o `null` si no existe (404).
+   */
   async getById(id: string): Promise<Donor | null> {
-    const { data, error } = await this.client
-      .from('donors')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(`Error al obtener donante de Supabase: ${error.message}`);
+    try {
+      return await apiGet<Donor>(`/api/donors/${id}`);
+    } catch (err: unknown) {
+      if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
+        return null;
+      }
+      throw err;
     }
-
-    return data as Donor;
   }
 
+  /**
+   * Registra un nuevo donante.
+   * @param dto Datos del donante.
+   * @returns El donante creado con ID y timestamp asignados por el servidor.
+   */
   async create(dto: CreateDonorDTO): Promise<Donor> {
-    return laravelApi.post<Donor>('/donors', dto);
+    return apiPost<Donor>('/api/donors', dto);
+  }
+
+  /**
+   * Actualiza los datos de un donante.
+   * @param id  UUID del donante.
+   * @param dto Campos a actualizar.
+   */
+  async update(id: string, dto: UpdateDonorDTO): Promise<Donor> {
+    return apiPut<Donor>(`/api/donors/${id}`, dto);
   }
 }
