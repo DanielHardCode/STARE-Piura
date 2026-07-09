@@ -17,6 +17,8 @@ import { Sidebar } from './Sidebar';
 import { BottomNav } from './BottomNav';
 import { useAuthStore } from '@/stores/auth';
 import type { ActiveScreen } from '@/app/config/app.config';
+import { AudioToggle } from '@/components/AudioToggle';
+import { soundEffects, useSoundState } from '@/animations/useSoundEffects';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +88,12 @@ export function AppLayout({
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const { user, logout } = useAuthStore();
   const isVoluntario = user?.role === 'voluntario';
+  const { playHover, playClick } = useSoundState();
+
+  // Play transition sound when activeScreen changes
+  useEffect(() => {
+    soundEffects.playTransition();
+  }, [activeScreen]);
 
   // Sidebar width offset for main content
   const sidebarWidth = isVoluntario ? 0 : (sidebarCollapsed ? 68 : 256);
@@ -181,7 +189,8 @@ export function AppLayout({
               {/* Dark mode toggle mobile */}
               <div className="px-3 py-4 border-t border-[var(--color-border)]">
                 <button
-                  onClick={toggleDarkMode}
+                  onClick={() => { playClick(); toggleDarkMode(); }}
+                  onMouseEnter={playHover}
                   className="flex items-center gap-3 w-full px-4 py-3 rounded-[var(--radius-lg)] text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                 >
                   {isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro'}
@@ -221,10 +230,15 @@ export function AppLayout({
             </div>
 
             <div className="flex items-center gap-3">
+              <AudioToggle />
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-[var(--color-text-primary)]">{user?.nombre || 'Voluntario'}</p>
               </div>
-              <button onClick={logout} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2">
+              <button 
+                onClick={() => { playClick(); logout(); }} 
+                onMouseEnter={playHover}
+                className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors flex items-center gap-2"
+              >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-bold hidden sm:block">Salir</span>
               </button>
@@ -270,10 +284,13 @@ export function AppLayout({
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
+            <AudioToggle />
+            
             {/* Notifications */}
             <div className="relative">
               <button
-                onClick={() => setShowNotifications((prev) => !prev)}
+                onClick={() => { playClick(); setShowNotifications((prev) => !prev); }}
+                onMouseEnter={playHover}
                 className={cn(
                   'relative p-2 rounded-[var(--radius-lg)]',
                   'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',

@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { springs } from '@/animations/variants';
 import type { ActiveScreen } from '@/app/config/app.config';
 import { useAuthStore } from '@/stores/auth';
+import { useSoundState } from '@/animations/useSoundEffects';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ const navItems: Array<{
 
 export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
   const { user } = useAuthStore();
+  const { playHover, playClick } = useSoundState();
 
   const filteredNavItems = navItems.filter((item) => {
     if (item.id === 'balance') {
@@ -72,7 +74,8 @@ export function BottomNav({ activeScreen, onNavigate }: BottomNavProps) {
           return (
             <motion.button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => { playClick(); onNavigate(item.id); }}
+              onMouseEnter={playHover}
               whileTap={{ scale: 0.92, transition: springs.stiff }}
               className={cn(
                 'relative flex-1 flex flex-col items-center justify-center gap-1',

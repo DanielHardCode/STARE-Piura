@@ -5,6 +5,10 @@ import { useAuthStore } from '@/stores/auth';
 import { useParticleCanvas } from '@/animations/useParticleCanvas';
 import { useGridCanvas }     from '@/animations/useGridCanvas';
 import { listItemVariants, listContainerVariants } from '@/animations/variants';
+import { useSoundState, soundEffects } from '@/animations/useSoundEffects';
+import loginNetwork from '@/assets/login_network.jpg';
+import { useEffect } from 'react';
+import { useImageCanvasOverlay } from '@/animations/useImageCanvasOverlay';
 
 interface LoginProps {
   onBack?: () => void;
@@ -15,14 +19,31 @@ export function Login({ onBack }: LoginProps) {
   const [password, setPassword]       = useState('');
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(null);
+  const { playHover, playClick } = useSoundState();
 
-  const { login, loading, error } = useAuthStore();
+  const { login, loading, error, user } = useAuthStore();
+
+  // Play sound on login success or error
+  useEffect(() => {
+    if (error) {
+      soundEffects.playError();
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (user) {
+      soundEffects.playSuccess();
+    }
+  }, [user]);
 
   // ── Canvas refs ─────────────────────────────────────────────────────────────
   const particleCanvasRef = useRef<HTMLCanvasElement>(null);
   const gridCanvasRef     = useRef<HTMLCanvasElement>(null);
+  const loginImageCanvasRef    = useRef<HTMLCanvasElement>(null);
+  const loginImageContainerRef = useRef<HTMLDivElement>(null);
 
   // ── Canvas hooks ────────────────────────────────────────────────────────────
+  useImageCanvasOverlay(loginImageCanvasRef, loginImageContainerRef);
   useParticleCanvas(particleCanvasRef, {
     count:       48,
     color:       '45,212,191',    // teal-400
@@ -46,6 +67,7 @@ export function Login({ onBack }: LoginProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
+    playClick();
     try {
       await login(email, password);
     } catch (err) {
@@ -54,6 +76,7 @@ export function Login({ onBack }: LoginProps) {
   };
 
   const handleFillCredentials = (role: 'admin' | 'coordinador' | 'voluntario') => {
+    playClick();
     setSelectedRole(role);
     if (role === 'admin') {
       setEmail('admin@starepiura.org');
@@ -102,14 +125,38 @@ export function Login({ onBack }: LoginProps) {
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0   }}
             transition={{ delay: 0.25 }}
-            onClick={onBack}
+            onMouseEnter={playHover}
+            onClick={() => { playClick(); onBack(); }}
             className="absolute -top-12 left-0 flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-xs font-mono tracking-wider uppercase cursor-pointer transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Volver al Inicio
           </motion.button>
         )}
 
-        <div className="bg-white/90 dark:bg-[#131e2f]/95 backdrop-blur-xl rounded-[28px] p-8 sm:p-12 shadow-[0_30px_60px_-12px_rgba(0,20,40,0.3)] dark:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 relative border border-slate-200/60 dark:border-white/5">
+        <div className="bg-white/90 dark:bg-[#131e2f]/95 backdrop-blur-xl rounded-[28px] shadow-[0_30px_60px_-12px_rgba(0,20,40,0.3)] dark:shadow-[0_30px_60px_-12px_rgba(0,0,0,0.7)] transition-all duration-300 relative border border-slate-200/60 dark:border-white/5 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
+          
+          {/* Left panel: Image decoration */}
+          <div ref={loginImageContainerRef} className="hidden md:block md:col-span-5 relative bg-slate-950">
+            <img 
+              src={loginNetwork} 
+              alt="Network" 
+              className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity hover:opacity-85 hover:mix-blend-normal transition-all duration-700 select-none pointer-events-none" 
+            />
+            <canvas
+              ref={loginImageCanvasRef}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{ zIndex: 6 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#131e2f] via-slate-900/40 to-transparent" />
+            <div className="absolute bottom-8 left-8 right-8 text-left space-y-2 z-10 font-sans">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-teal-400 uppercase">Seguridad Zonal</span>
+              <h2 className="text-xl font-black text-white leading-tight uppercase font-mono">Trazabilidad Segura</h2>
+              <p className="text-[11px] text-slate-400 leading-relaxed font-mono">Acceso cifrado y autenticado bajo protocolo RBAC regional.</p>
+            </div>
+          </div>
+
+          {/* Right panel: Login form */}
+          <div className="col-span-1 md:col-span-7 p-8 sm:p-12">
 
           {/* ── Logo / Branding ── */}
           <div className="flex flex-col items-center text-center mb-10 select-none">
@@ -203,7 +250,7 @@ export function Login({ onBack }: LoginProps) {
                   placeholder="nombre@starepiura.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onFocus={() => setFocusedField('email')}
+                  onFocus={() => { playHover(); setFocusedField('email'); }}
                   onBlur={() => setFocusedField(null)}
                   disabled={loading}
                   required
@@ -230,7 +277,7 @@ export function Login({ onBack }: LoginProps) {
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onFocus={() => setFocusedField('password')}
+                  onFocus={() => { playHover(); setFocusedField('password'); }}
                   onBlur={() => setFocusedField(null)}
                   disabled={loading}
                   required
@@ -244,6 +291,7 @@ export function Login({ onBack }: LoginProps) {
               <button
                 type="submit"
                 disabled={loading}
+                onMouseEnter={playHover}
                 className="shimmer-sweep-effect w-full mt-2 py-4 bg-slate-900 dark:bg-teal-600 hover:bg-slate-800 dark:hover:bg-teal-500 text-white rounded-2xl font-semibold text-lg tracking-wide shadow-[0_4px_12px_rgba(10,42,68,0.2)] dark:shadow-[0_4px_12px_rgba(26,122,122,0.3)] transition-all flex items-center justify-center gap-2 hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(10,42,68,0.25)] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:transform-none"
               >
                 {loading ? (
@@ -289,6 +337,7 @@ export function Login({ onBack }: LoginProps) {
                     animate={{ opacity: 1, x: 0   }}
                     transition={{ delay: 0.5 + idx * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
                     whileHover={{ x: 3, transition: { duration: 0.15 } }}
+                    onMouseEnter={playHover}
                     onClick={() => handleFillCredentials(item.role as any)}
                     className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-3 sm:pl-4 rounded-xl border-2 transition-all cursor-pointer select-none
                       ${isSelected
@@ -321,12 +370,13 @@ export function Login({ onBack }: LoginProps) {
             transition={{ delay: 0.7 }}
           >
             <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
-              <a href="#" className="font-medium text-slate-800 dark:text-[#d0e0f0] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">¿Olvidaste tu contraseña?</a>
-              <a href="#" className="font-medium text-slate-800 dark:text-[#d0e0f0] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Registrar nueva cuenta</a>
-              <a href="#" className="font-medium text-slate-800 dark:text-[#d0e0f0] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Ayuda</a>
+              <a href="#" onMouseEnter={playHover} onClick={playClick} className="font-medium text-slate-800 dark:text-[#d0e0f0] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">¿Olvidaste tu contraseña?</a>
+              <a href="#" onMouseEnter={playHover} onClick={playClick} className="font-medium text-slate-800 dark:text-[#d0e0f0] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Registrar nueva cuenta</a>
+              <a href="#" onMouseEnter={playHover} onClick={playClick} className="font-medium text-slate-800 dark:text-[#d0e0f0] hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Ayuda</a>
             </div>
           </motion.div>
 
+          </div>
         </div>
       </motion.div>
     </div>

@@ -16,6 +16,9 @@ import {
 import { useParticleCanvas }  from '@/animations/useParticleCanvas';
 import { useDataFlowCanvas }  from '@/animations/useDataFlowCanvas';
 import { listItemVariants, listContainerVariants } from '@/animations/variants';
+import { useSoundState } from '@/animations/useSoundEffects';
+import heroIllustration from '@/assets/hero_illustration.jpg';
+import { useImageCanvasOverlay } from '@/animations/useImageCanvasOverlay';
 
 interface LandingProps {
   onEnter: () => void;
@@ -35,6 +38,7 @@ function FeatureCard({
 }) {
   const ref     = useRef<HTMLDivElement>(null);
   const inView  = useInView(ref, { once: true, margin: '-60px' });
+  const { playHover } = useSoundState();
 
   return (
     <motion.div
@@ -43,6 +47,7 @@ function FeatureCard({
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.5, delay, ease: [0.32, 0.72, 0, 1] }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      onMouseEnter={playHover}
       className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl hover:border-teal-500/40 hover:bg-slate-900/60 transition-colors group space-y-4 cursor-default"
     >
       <motion.div
@@ -86,6 +91,11 @@ export function Landing({ onEnter }: LandingProps) {
   // Canvas refs
   const particleCanvasRef  = useRef<HTMLCanvasElement>(null);
   const dataFlowCanvasRef  = useRef<HTMLCanvasElement>(null);
+  const imageCanvasRef     = useRef<HTMLCanvasElement>(null);
+  const imageContainerRef  = useRef<HTMLDivElement>(null);
+  const { playHover, playClick } = useSoundState();
+
+  useImageCanvasOverlay(imageCanvasRef, imageContainerRef);
 
   // Parallax blobs
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -179,7 +189,8 @@ export function Landing({ onEnter }: LandingProps) {
         <motion.button
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
-          onClick={onEnter}
+          onMouseEnter={playHover}
+          onClick={() => { playClick(); onEnter(); }}
           className="shimmer-sweep-effect flex items-center gap-1.5 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-xs font-semibold text-white transition-colors cursor-pointer"
         >
           Acceder <ChevronRight className="w-3.5 h-3.5" />
@@ -235,7 +246,8 @@ export function Landing({ onEnter }: LandingProps) {
             <motion.button
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.97 }}
-              onClick={onEnter}
+              onMouseEnter={playHover}
+              onClick={() => { playClick(); onEnter(); }}
               className="shimmer-sweep-effect px-8 py-4 bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 font-sans font-black text-sm uppercase tracking-wider rounded-xl cursor-pointer shadow-xl shadow-teal-500/20 hover:shadow-teal-500/30 transition-colors flex items-center gap-2"
             >
               Iniciar Operaciones <ArrowRight className="w-4 h-4 stroke-[2.5]" />
@@ -243,6 +255,8 @@ export function Landing({ onEnter }: LandingProps) {
 
             <motion.a
               whileHover={{ scale: 1.02 }}
+              onMouseEnter={playHover}
+              onClick={playClick}
               href="#caracteristicas"
               className="px-6 py-4 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-all text-center flex items-center justify-center"
             >
@@ -323,6 +337,89 @@ export function Landing({ onEnter }: LandingProps) {
           </motion.div>
         </div>
       </main>
+
+      {/* ── Sección Multimedia: Visión Zonal e Impacto ── */}
+      <section className="w-full max-w-7xl mx-auto px-6 py-16 border-t border-white/5 relative" style={{ zIndex: 2 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* Columna de Imagen Ilustrativa */}
+          <div className="lg:col-span-6">
+            <motion.div
+              ref={imageContainerRef}
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, type: 'spring' }}
+              whileHover={{ scale: 1.015, rotate: 0.5 }}
+              className="relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl group cursor-pointer"
+            >
+              <img
+                src={heroIllustration}
+                alt="Ayuda comunitaria en Piura"
+                className="w-full h-auto object-cover max-h-[360px] filter brightness-95 group-hover:brightness-100 transition-all duration-300 select-none pointer-events-none"
+              />
+              <canvas
+                ref={imageCanvasRef}
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                style={{ zIndex: 6 }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+              <div className="absolute bottom-4 left-4 font-mono text-[10px] text-teal-400 font-bold uppercase tracking-wider bg-slate-950/80 px-2.5 py-1 rounded border border-white/5">
+                Región Piura, Perú
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Columna de Texto Descriptivo */}
+          <div className="lg:col-span-6 space-y-6 text-left">
+            <motion.span
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-[10px] font-mono font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full inline-block"
+            >
+              Multimedia & Solidaridad
+            </motion.span>
+            <motion.h3
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-2xl sm:text-3xl font-black uppercase tracking-tight"
+            >
+              Conectando MYPEs con Comedores Sociales
+            </motion.h3>
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-xs sm:text-sm text-slate-400 leading-relaxed"
+            >
+              El programa STARE Piura optimiza la distribución alimentaria local en tiempo real. Mediante un flujo constante y mapeo de brechas geográficas, empoderamos la economía local abasteciendo a quienes más lo necesitan sin demoras burocráticas.
+            </motion.p>
+            <motion.ul
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="space-y-2 text-xs font-mono text-slate-350"
+            >
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                Mapeo de Cobertura en Catacaos y Sullana
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                Sincronización Inteligente Offline/Online
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                Transacciones Verificadas bajo Cifrado Seguro
+              </li>
+            </motion.ul>
+          </div>
+        </div>
+      </section>
 
       {/* ── Features Grid Section ── */}
       <section id="caracteristicas" className="w-full max-w-7xl mx-auto px-6 py-20 border-t border-white/5 relative" style={{ zIndex: 2 }}>

@@ -29,6 +29,7 @@ import { springs, sidebarVariants, sidebarLabelVariants } from '@/animations/var
 import { Avatar, CountBadge } from '@/components/ui';
 import type { ActiveScreen } from '@/app/config/app.config';
 import { useAuthStore } from '@/stores/auth';
+import { useSoundState } from '@/animations/useSoundEffects';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,10 +81,12 @@ function NavItem({
   onClick: () => void;
 }) {
   const Icon = item.icon;
+  const { playHover, playClick } = useSoundState();
 
   return (
     <motion.button
-      onClick={onClick}
+      onClick={() => { playClick(); onClick(); }}
+      onMouseEnter={playHover}
       whileHover={{ scale: 1.02, transition: springs.stiff }}
       whileTap={{ scale: 0.97, transition: springs.stiff }}
       title={collapsed ? item.label : undefined}
@@ -138,6 +141,7 @@ export function Sidebar({
   onToggleDarkMode,
 }: SidebarProps) {
   const { user, logout } = useAuthStore();
+  const { playHover, playClick } = useSoundState();
 
   const filteredNavItems = navItems.filter((item) => {
     if (item.id === 'balance') {
@@ -237,7 +241,8 @@ export function Sidebar({
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
-          onClick={onToggleDarkMode}
+          onMouseEnter={playHover}
+          onClick={() => { playClick(); onToggleDarkMode(); }}
           title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
           className={cn(
             'flex items-center gap-3 w-full px-3 py-2.5',
@@ -283,7 +288,8 @@ export function Sidebar({
                 </p>
               </motion.div>
               <button
-                onClick={logout}
+                onClick={() => { playClick(); logout(); }}
+                onMouseEnter={playHover}
                 title="Cerrar sesión"
                 className="p-1 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40 rounded-md transition-colors shrink-0"
               >
@@ -294,7 +300,8 @@ export function Sidebar({
             </>
           ) : (
             <button
-              onClick={logout}
+              onClick={() => { playClick(); logout(); }}
+              onMouseEnter={playHover}
               title="Cerrar sesión"
               className="p-1 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40 rounded-md transition-colors w-7 h-7 flex items-center justify-center"
             >
@@ -308,7 +315,8 @@ export function Sidebar({
 
       {/* ── Collapse Toggle ── */}
       <motion.button
-        onClick={onToggleCollapse}
+        onClick={() => { playClick(); onToggleCollapse(); }}
+        onMouseEnter={playHover}
         whileHover={{ scale: 1.1, transition: springs.stiff }}
         whileTap={{ scale: 0.9, transition: springs.stiff }}
         aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
